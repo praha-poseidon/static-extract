@@ -1,5 +1,7 @@
 package com.poseidon.javastatic.extract.cli;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
@@ -9,11 +11,18 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class JavaStaticExtractCliTest {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @TempDir
     Path tempDir;
@@ -94,6 +103,7 @@ class JavaStaticExtractCliTest {
         assertEquals(0, output.exitCode());
         assertTrue(output.stdout().contains("\"resultCount\" : 1"));
         assertEquals(1, Files.readAllLines(outputFile).size());
+        assertJsonLinesMatchExtractedFactSpec(outputFile);
     }
 
     @Test
@@ -138,6 +148,72 @@ class JavaStaticExtractCliTest {
     }
 
     private record CliOutput(int exitCode, String stdout, String stderr) {}
+
+    private static void assertJsonLinesMatchExtractedFactSpec(Path outputFile) throws Exception {
+        JsonNode schema = OBJECT_MAPPER.readTree(Files.readString(findSpecSchema("extracted-fact.schema.json")));
+        Set<String> required = OBJECT_MAPPER.convertValue(
+                schema.get("required"),
+                OBJECT_MAPPER.getTypeFactory().constructCollectionType(Set.class, String.class));
+        Map<String, JsonNode> properties = OBJECT_MAPPER.convertValue(
+                schema.get("properties"),
+                OBJECT_MAPPER.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
+
+        for (String line : Files.readAllLines(outputFile)) {
+            JsonNode record = OBJECT_MAPPER.readTree(line);
+            assertEquals("object", record.isObject() ? "object" : record.getNodeType().name().toLowerCase());
+            for (String name : required) {
+                assertTrue(record.has(name), "Missing required spec field: " + name);
+            }
+            Iterator<String> fieldNames = record.fieldNames();
+            while (fieldNames.hasNext()) {
+                String name = fieldNames.next();
+                assertTrue(properties.containsKey(name), "Unexpected field not declared by spec: " + name);
+                assertMatchesSpecType(name, record.get(name), properties.get(name).get("type"));
+            }
+        }
+    }
+
+    private static void assertMatchesSpecType(String name, JsonNode value, JsonNode typeSpec) {
+        assertNotNull(typeSpec, "Missing schema type for field: " + name);
+        if (typeSpec.isTextual()) {
+            assertMatchesType(name, value, typeSpec.asText());
+            return;
+        }
+        if (typeSpec.isArray()) {
+            for (JsonNode allowedType : typeSpec) {
+                if (matchesType(value, allowedType.asText())) {
+                    return;
+                }
+            }
+            fail("Field does not match any allowed spec type: " + name);
+        }
+    }
+
+    private static void assertMatchesType(String name, JsonNode value, String type) {
+        assertTrue(matchesType(value, type), "Field does not match spec type " + type + ": " + name);
+    }
+
+    private static boolean matchesType(JsonNode value, String type) {
+        return switch (type) {
+            case "string" -> value.isTextual();
+            case "integer" -> value.isIntegralNumber();
+            case "object" -> value.isObject();
+            case "null" -> value.isNull();
+            default -> false;
+        };
+    }
+
+    private static Path findSpecSchema(String name) {
+        Path current = Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        while (current != null) {
+            Path candidate = current.resolve("spec/schema").resolve(name);
+            if (Files.isRegularFile(candidate)) {
+                return candidate;
+            }
+            current = current.getParent();
+        }
+        throw new IllegalStateException("Spec schema not found: " + name);
+    }
 
     private Fixture fixture() throws Exception {
         Path project = tempDir.resolve("project-" + System.nanoTime());

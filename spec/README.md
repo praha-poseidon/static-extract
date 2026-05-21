@@ -30,3 +30,25 @@ future static-extract-runtime-ts-*
 ```
 
 The stable integration point across languages is JSON, not a shared Java jar.
+
+## How Code Uses This Spec
+
+Runtimes should reference files in this directory from tests and release
+checks. The spec is not only documentation.
+
+The Java CLI test currently reads:
+
+```text
+spec/schema/extracted-fact.schema.json
+```
+
+and validates JSONL produced by `static-extract-java run` against that schema.
+
+Future runtimes should do the same:
+
+```text
+static-extract-ts run ... -> JSONL -> validate each line with extracted-fact.schema.json
+static-extract-vue run ... -> JSONL -> validate each line with extracted-fact.schema.json
+```
+
+That makes the spec a machine-checked compatibility contract.
