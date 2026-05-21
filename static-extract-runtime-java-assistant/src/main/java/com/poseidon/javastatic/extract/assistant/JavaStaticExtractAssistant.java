@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.poseidon.javastatic.extract.jdt.StaticExtractResult;
 import com.poseidon.javastatic.extract.jdt.load.SerRuleLoader;
 import com.poseidon.javastatic.extract.jdt.project.JavaStaticExtractProjectRunner;
+import com.poseidon.javastatic.extract.runtime.ExtractedFact;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -105,7 +106,7 @@ public final class JavaStaticExtractAssistant {
                 request.traceRuleDirectories(),
                 request.builtinRules(),
                 request.externalValues());
-        List<ExtractedRecord> results = records(builder.build().extract());
+        List<ExtractedFact> results = records(builder.build().extract());
         if (request.outputFile() != null) {
             writeJsonLines(request.outputFile(), results);
         }
@@ -174,27 +175,18 @@ public final class JavaStaticExtractAssistant {
         }
     }
 
-    private List<ExtractedRecord> records(List<StaticExtractResult> results) {
-        return results.stream().map(result -> new ExtractedRecord(
-                result.rule().name(),
-                result.rule().fact().type(),
-                result.rule().classifiers(),
-                result.fields(),
-                result.projectFilePath(),
-                result.absoluteFilePath(),
-                result.startLine(),
-                result.endLine(),
-                result.enclosingMethodSignatureHint())).toList();
+    private List<ExtractedFact> records(List<StaticExtractResult> results) {
+        return results.stream().map(StaticExtractResult::toFact).toList();
     }
 
-    private void writeJsonLines(Path outputFile, List<ExtractedRecord> results) {
+    private void writeJsonLines(Path outputFile, List<ExtractedFact> results) {
         Path target = normalize(outputFile);
         try {
             if (target.getParent() != null) {
                 Files.createDirectories(target.getParent());
             }
             List<String> lines = new ArrayList<>();
-            for (ExtractedRecord result : results) {
+            for (ExtractedFact result : results) {
                 lines.add(objectMapper.writeValueAsString(result));
             }
             Files.write(target, lines, StandardCharsets.UTF_8);

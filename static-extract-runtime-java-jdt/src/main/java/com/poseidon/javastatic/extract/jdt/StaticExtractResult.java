@@ -1,6 +1,7 @@
 package com.poseidon.javastatic.extract.jdt;
 
 import com.poseidon.javastatic.extract.rule.StaticExtractRule;
+import com.poseidon.javastatic.extract.runtime.ExtractedFact;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.util.Map;
@@ -13,4 +14,18 @@ public record StaticExtractResult(
         String projectFilePath,
         String absoluteFilePath,
         String enclosingMethodSignatureHint,
-        ASTNode anchorNode) {}
+        ASTNode anchorNode) {
+
+    public ExtractedFact toFact() {
+        return new ExtractedFact(
+                rule.name(),
+                rule.fact().type(),
+                rule.classifiers(),
+                fields,
+                projectFilePath,
+                absoluteFilePath,
+                startLine,
+                endLine,
+                enclosingMethodSignatureHint);
+    }
+}

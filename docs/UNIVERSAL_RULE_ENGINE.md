@@ -233,7 +233,7 @@ The `fields` object is still defined entirely by the SER `build` block.
   "absoluteFilePath": "/repo/src/pages/UserPage.tsx",
   "startLine": 42,
   "endLine": 42,
-  "enclosingMethod": "handleSubmit"
+  "enclosingSymbol": "handleSubmit"
 }
 ```
 

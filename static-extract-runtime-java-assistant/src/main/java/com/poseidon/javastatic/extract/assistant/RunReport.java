@@ -1,5 +1,7 @@
 package com.poseidon.javastatic.extract.assistant;
 
+import com.poseidon.javastatic.extract.runtime.ExtractedFact;
+
 import java.util.List;
 
 public record RunReport(
@@ -7,5 +9,5 @@ public record RunReport(
         String projectRoot,
         List<String> ruleInputs,
         int resultCount,
-        List<ExtractedRecord> results,
+        List<ExtractedFact> results,
         String outputFile) {}

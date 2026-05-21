@@ -1,5 +1,6 @@
 package com.poseidon.javastatic.extract.assistant;
 
+import com.poseidon.javastatic.extract.runtime.ExtractedFact;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -43,7 +44,7 @@ class JavaStaticExtractAssistantTest {
 
         assertEquals("OK", report.status());
         assertEquals(1, report.resultCount());
-        ExtractedRecord result = report.results().getFirst();
+        ExtractedFact result = report.results().getFirst();
         assertEquals("GET", result.fields().get("httpMethod"));
         assertEquals("/api/users/{param}", result.fields().get("path"));
         assertEquals("http_inbound", result.factType());

@@ -1,5 +1,7 @@
 package com.poseidon.javastatic.extract.assistant;
 
+import com.poseidon.javastatic.extract.runtime.ExtractedFact;
+
 import java.util.List;
 
 public record TryReport(
@@ -8,4 +10,4 @@ public record TryReport(
         List<String> files,
         List<String> ruleInputs,
         int resultCount,
-        List<ExtractedRecord> results) {}
+        List<ExtractedFact> results) {}

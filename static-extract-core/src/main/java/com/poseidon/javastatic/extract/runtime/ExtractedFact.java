@@ -1,8 +1,8 @@
-package com.poseidon.javastatic.extract.assistant;
+package com.poseidon.javastatic.extract.runtime;
 
 import java.util.Map;
 
-public record ExtractedRecord(
+public record ExtractedFact(
         String rule,
         String factType,
         Map<String, String> classifiers,
@@ -11,4 +11,4 @@ public record ExtractedRecord(
         String absoluteFilePath,
         int startLine,
         int endLine,
-        String enclosingMethod) {}
+        String enclosingSymbol) {}
