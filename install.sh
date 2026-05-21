@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BIN_DIR="${JAVA_STATIC_EXTRACT_BIN_DIR:-$HOME/.local/bin}"
+BIN_DIR="${STATIC_EXTRACT_JAVA_BIN_DIR:-${JAVA_STATIC_EXTRACT_BIN_DIR:-$HOME/.local/bin}}"
 INSTALL_CLI=1
 INSTALL_SKILLS=1
 MVN_CMD=""
@@ -12,13 +12,14 @@ usage() {
 Usage: ./install.sh [options]
 
 Options:
-  --bin-dir DIR       Install the java-static-extract command into DIR.
+  --bin-dir DIR       Install the static-extract-java command into DIR.
   --no-cli            Do not build or install the CLI command.
   --no-skills         Do not install Codex/Claude skills.
   -h, --help          Show this help.
 
 Environment:
-  JAVA_STATIC_EXTRACT_BIN_DIR      Default CLI install directory.
+  STATIC_EXTRACT_JAVA_BIN_DIR      Default Java runtime CLI install directory.
+  JAVA_STATIC_EXTRACT_BIN_DIR      Legacy alias for the CLI install directory.
   CODEX_SKILLS_DIR                 Default: ~/.codex/skills
   CLAUDE_SKILLS_DIR                Default: ~/.claude/skills
 USAGE
@@ -103,28 +104,28 @@ check_cli_prerequisites() {
 
 install_cli() {
   check_cli_prerequisites
-  echo "Building java-static-extract CLI..."
-  (cd "$ROOT_DIR" && "$MVN_CMD" -pl java-static-extract-cli -am package)
+  echo "Building static-extract Java runtime CLI..."
+  (cd "$ROOT_DIR" && "$MVN_CMD" -pl static-extract-runtime-java-cli -am package)
 
-  local source_bin="$ROOT_DIR/java-static-extract-cli/target/appassembler/bin/java-static-extract"
+  local source_bin="$ROOT_DIR/static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java"
   if [[ ! -x "$source_bin" ]]; then
     echo "CLI script was not generated: $source_bin" >&2
     exit 1
   fi
 
   mkdir -p "$BIN_DIR"
-  if ! ln -sfn "$source_bin" "$BIN_DIR/java-static-extract" 2>/dev/null; then
+  if ! ln -sfn "$source_bin" "$BIN_DIR/static-extract-java" 2>/dev/null; then
     echo "Symlink failed. Copying the command script instead..."
-    cp "$source_bin" "$BIN_DIR/java-static-extract"
-    chmod +x "$BIN_DIR/java-static-extract"
+    cp "$source_bin" "$BIN_DIR/static-extract-java"
+    chmod +x "$BIN_DIR/static-extract-java"
   fi
-  echo "Installed command: $BIN_DIR/java-static-extract"
+  echo "Installed command: $BIN_DIR/static-extract-java"
 }
 
 install_skill_dir() {
   local target_root="$1"
-  local source_dir="$ROOT_DIR/skills/java-static-extract"
-  local target_dir="$target_root/java-static-extract"
+  local source_dir="$ROOT_DIR/skills/static-extract-java"
+  local target_dir="$target_root/static-extract-java"
 
   if [[ ! -d "$source_dir" ]]; then
     die "Skill source directory was not found: $source_dir"
@@ -156,7 +157,7 @@ cat <<EOF
 Done.
 
 Try:
-  java-static-extract --help
+  static-extract-java --help
 
 If the command is not found, add this to your shell profile:
   export PATH="$BIN_DIR:\$PATH"

@@ -5,11 +5,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.poseidon</groupId>
-  <artifactId>java-static-extract</artifactId>
+  <artifactId>static-extract</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>java-static-extract</name>
-  <description>Java static extraction rule language and JDT runtime</description>
+  <name>static-extract</name>
+  <description>Rule-based static fact extraction engine and language runtimes</description>
 
   <properties>
     <java.version>21</java.version>
@@ -83,11 +83,11 @@
   </dependencyManagement>
 
   <modules>
-    <module>java-static-extract-core</module>
-    <module>java-static-extract-jdt</module>
-    <module>java-static-extract-assistant</module>
-    <module>java-static-extract-cli</module>
-    <module>java-static-extract-examples</module>
+    <module>static-extract-core</module>
+    <module>static-extract-runtime-java-jdt</module>
+    <module>static-extract-runtime-java-assistant</module>
+    <module>static-extract-runtime-java-cli</module>
+    <module>static-extract-examples-java</module>
   </modules>
 
   <build>

@@ -1,8 +1,8 @@
 # Functional Capability Matrix
 
-Java static extract is designed around Java/JDT elements, not framework-specific code paths.
+Static Extract's current Java runtime is designed around Java/JDT elements, not framework-specific code paths.
 
-Java static extract 的核心是 Java/JDT 元素能力，不是针对某个框架写死解析逻辑。
+Static Extract 当前 Java runtime 的核心是 Java/JDT 元素能力，不是针对某个框架写死解析逻辑。
 
 The table below lists the generic capabilities that are covered by functional tests.
 
@@ -33,9 +33,9 @@ The table below lists the generic capabilities that are covered by functional te
 
 ## Real Project Validation
 
-The sibling consumer project at `/Users/joker/java-static-extract-consumer` verifies the library as an external dependency.
+A sibling consumer project verifies the Java runtime as an external dependency.
 
-同级验证工程 `/Users/joker/java-static-extract-consumer` 像普通用户一样引入 jar，从外部验证库能力。
+同级验证工程像普通用户一样引入 jar，从外部验证 Java runtime 能力。
 
 It currently runs against:
 
@@ -47,9 +47,9 @@ It currently runs against:
 | Quarkus Quickstarts | JAX-RS SER rules | 527 records |
 | Quarkus Quickstarts | JAX-RS + ConfigProperty trace + external dictionary | 569 records, including 42 config field records |
 
-The benchmark rules live in the consumer project, not in `java-static-extract-jdt`.
+The benchmark rules live in the consumer project, not in `static-extract-runtime-java-jdt`.
 
-这些验证规则放在 consumer 工程里，不内置到 `java-static-extract-jdt`。
+这些验证规则放在 consumer 工程里，不内置到 `static-extract-runtime-java-jdt`。
 
 ## What This Proves
 

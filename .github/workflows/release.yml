@@ -20,24 +20,24 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Build CLI
-        run: mvn -B -pl java-static-extract-cli -am package
+      - name: Build Java runtime CLI
+        run: mvn -B -pl static-extract-runtime-java-cli -am package
 
-      - name: Package CLI distribution
+      - name: Package Java runtime CLI distribution
         run: |
-          mkdir -p target/release/java-static-extract-cli
-          cp -R java-static-extract-cli/target/appassembler/bin target/release/java-static-extract-cli/
-          cp -R java-static-extract-cli/target/appassembler/repo target/release/java-static-extract-cli/
-          cp README.md LICENSE target/release/java-static-extract-cli/
-          chmod +x target/release/java-static-extract-cli/bin/java-static-extract
+          mkdir -p target/release/static-extract-java
+          cp -R static-extract-runtime-java-cli/target/appassembler/bin target/release/static-extract-java/
+          cp -R static-extract-runtime-java-cli/target/appassembler/repo target/release/static-extract-java/
+          cp README.md LICENSE target/release/static-extract-java/
+          chmod +x target/release/static-extract-java/bin/static-extract-java
           cd target/release
-          zip -r java-static-extract-cli.zip java-static-extract-cli
+          zip -r static-extract-java.zip static-extract-java
 
       - uses: actions/upload-artifact@v4
         with:
-          name: java-static-extract-cli
-          path: target/release/java-static-extract-cli.zip
+          name: static-extract-java
+          path: target/release/static-extract-java.zip
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: target/release/java-static-extract-cli.zip
+          files: target/release/static-extract-java.zip

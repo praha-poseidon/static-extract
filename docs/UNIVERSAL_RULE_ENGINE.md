@@ -1,10 +1,10 @@
 # Universal Rule Engine Roadmap
 
-This document describes the direction for evolving Java Static Extract from a
+This document describes the direction for evolving Static Extract from a
 Java-focused static extraction engine into a universal rule engine for
 cross-language code facts.
 
-本文档描述 Java Static Extract 的演进方向：从 Java 静态提取引擎，演进为面向多语言代码事实的通用规则引擎。
+本文档描述 Static Extract 的演进方向：从 Java 静态提取引擎，演进为面向多语言代码事实的通用规则引擎。
 
 ## Goal
 
@@ -156,7 +156,7 @@ Initial runtime targets:
 初始 runtime 目标：
 
 ```text
-java-static-extract-jdt
+static-extract-runtime-java-jdt
   Java source through Eclipse JDT.
 
 typescript-static-extract
@@ -330,7 +330,7 @@ The CLI should eventually support:
 CLI 后续应支持：
 
 ```bash
-java-static-extract run \
+static-extract-java run \
   --project /my-project \
   --ruleset frontend/react \
   --ruleset frontend/axios \
@@ -343,7 +343,7 @@ Project-specific rules should be composable with official rulesets:
 项目私有规则应该可以和官方规则包组合：
 
 ```bash
-java-static-extract run \
+static-extract-java run \
   --project /my-project \
   --ruleset frontend/react \
   --rules ./company-rules \
@@ -363,7 +363,7 @@ Future command:
 未来命令：
 
 ```bash
-java-static-extract discover --project /my-project --language typescript
+static-extract-java discover --project /my-project --language typescript
 ```
 
 Possible output:
