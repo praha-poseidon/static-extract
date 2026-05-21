@@ -10,6 +10,7 @@ JSON output shape.
 
 - `schema/extracted-fact.schema.json` defines the runtime output record.
 - `schema/rule-manifest.schema.json` defines a portable rule pack manifest.
+- `ser/Ser.g4` defines the SER grammar used by runtime parser implementations.
 - `cli/runtime-cli.md` defines the command shape each runtime CLI should expose.
 
 ## Runtime Relationship
@@ -43,6 +44,16 @@ spec/schema/extracted-fact.schema.json
 ```
 
 and validates JSONL produced by `static-extract-java run` against that schema.
+
+The Java parser build copies:
+
+```text
+spec/ser/Ser.g4
+```
+
+into the Java parser module before ANTLR generates parser code. Future runtimes
+should use the same grammar source or generated parser output for their own
+language.
 
 Future runtimes should do the same:
 
