@@ -5,11 +5,10 @@ extracting static facts from Java source code.
 
 Java Static Extract 提供一套小型 SER 规则语言和 JDT 运行时，用来从 Java 源码中静态提取信息。
 
-It is designed for AI coding agents, code intelligence platforms, architecture
-governance, API inventory, and other automation that needs reliable Java facts
-instead of fragile text search.
+It is designed for AI coding agents and other automation that needs reliable
+Java facts instead of fragile text search.
 
-它面向 AI 编码 agent、代码智能平台、架构治理、接口盘点等自动化场景，目标是提供可靠的 Java 静态事实，而不是依赖脆弱的文本搜索。
+它面向 AI 编码 agent 和其他自动化场景，目标是提供可靠的 Java 静态事实，而不是依赖脆弱的文本搜索。
 
 Current status: `0.0.1-SNAPSHOT`, alpha. The core model is usable, but SER
 syntax and Java APIs may still change before a stable release.
@@ -18,13 +17,13 @@ syntax and Java APIs may still change before a stable release.
 
 ## Background
 
-Many code intelligence tools need to extract structured facts from source code:
-HTTP endpoints, RPC calls, message topics, database operations, cache keys, or
-other framework-specific entry points. These facts are often written in code as
+Many tools need to extract structured facts from source code: HTTP endpoints,
+RPC calls, message topics, database operations, cache keys, UI actions, or other
+framework-specific code shapes. These facts are often written in code as
 annotations, method calls, constants, string concatenations, return values, or
 configuration placeholders.
 
-很多代码分析、代码图谱、接口治理、资产盘点工具都需要从源码中提取结构化信息，例如 HTTP 入口、RPC 调用、消息 topic、数据库操作、缓存 key，或者其他框架相关的入口。这些信息通常不是直接写在一个地方，而是分散在注解、方法调用、常量、字符串拼接、返回值、配置占位符等代码形态里。
+很多工具都需要从源码中提取结构化信息，例如 HTTP 入口、RPC 调用、消息 topic、数据库操作、缓存 key、UI action，或者其他框架相关的代码形态。这些信息通常不是直接写在一个地方，而是分散在注解、方法调用、常量、字符串拼接、返回值、配置占位符等代码形态里。
 
 Hard-coding every framework parser into an engine makes the engine difficult to
 extend. Java Static Extract separates the problem into two parts:
@@ -38,23 +37,19 @@ extend. Java Static Extract separates the problem into two parts:
 - SER 规则描述要找什么代码形态，以及最终要 build 出哪些字段。
 - JDT 运行时负责执行规则、追踪 Java 值，并返回稳定的字段 Map。
 
-## AI and Agent Use Cases
+## AI and Agent Use
 
-AI 编码助手和代码治理 agent 通常需要先理解项目里的真实入口和依赖关系，再生成规则、文档、架构图或治理报告。直接让大模型扫描源码容易受到上下文长度、幻觉和字符串匹配误差影响。Java Static Extract 把这部分工作拆成可执行、可验证的规则：
+AI 编码助手通常需要从源码中拿到可验证的结构化事实。直接让大模型扫描源码容易受到上下文长度、幻觉和字符串匹配误差影响。Java Static Extract 把这部分工作拆成可执行、可验证的规则：
 
 - AI agents can generate or adjust SER rules, then call the CLI to verify them
   against real Java files.
 - AI agents can use `diagnose` to inspect source facts when a rule does not
   match, instead of guessing from raw source text.
-- Code intelligence systems can feed extracted JSON/JSONL records into RAG,
-  knowledge graphs, API catalogs, service maps, or architecture review tools.
-- Governance workflows can keep framework-specific extraction logic in rule
-  files, so teams can review and version it like code.
+- SER rules keep framework-specific extraction logic explicit and versionable.
 
 - AI agent 可以生成或调整 SER 规则，再调用 CLI 在真实 Java 文件上验证。
 - 当规则没有命中时，AI agent 可以用 `diagnose` 查看源码事实，而不是只靠源码文本猜测。
-- 代码智能系统可以把提取出的 JSON/JSONL 结果送入 RAG、知识图谱、API 目录、服务地图或架构评审工具。
-- 治理流程可以把框架相关的提取逻辑放在规则文件里，像代码一样评审和版本化。
+- SER 规则把框架相关的提取逻辑显式化，并且可以像代码一样版本化。
 
 ## What It Can Do
 

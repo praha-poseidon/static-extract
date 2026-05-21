@@ -178,9 +178,8 @@ Spring controller method with annotations, or an invocation, such as
 
 ## Endpoint Fields
 
-The build block emits arbitrary fields. This module does not know graph endpoint
-classes and does not require fixed fields such as `httpMethod`, `path`, `topic`,
-or `keyPattern`.
+The build block emits arbitrary fields. This module does not require fixed
+fields such as `httpMethod`, `path`, `topic`, or `keyPattern`.
 
 ```ser
 endpoint HTTP inbound
@@ -191,8 +190,4 @@ build {
 }
 ```
 
-The graph engine owns the next mapping step:
-
-```text
-endpoint label + build fields -> graph endpoint class/properties
-```
+The extracted fields are the values produced by the rule.

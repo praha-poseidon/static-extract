@@ -302,13 +302,9 @@ The output protocol is `Map<String, String>` inside `StaticExtractResult`.
 
 输出协议是 `StaticExtractResult` 里的 `Map<String, String>`。
 
-The graph engine or caller owns the next mapping step.
+The extracted fields are the values produced by the rule.
 
-图谱引擎或调用方负责下一步映射。
-
-```text
-endpoint labels + build fields -> caller's domain object
-```
+提取字段就是规则生成的结果。
 
 ```text
 endpoint 标签 + build 字段 -> 调用方自己的领域对象

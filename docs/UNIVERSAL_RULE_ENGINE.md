@@ -350,16 +350,6 @@ java-static-extract run \
   --out facts.jsonl
 ```
 
-## Downstream Integration
-
-Static Extract emits extracted records. It does not build graph edges, infer
-business flows, or decide how facts should be connected. Graph platforms, RAG
-indexes, API catalogs, governance tools, or custom downstream systems can use
-`factType`, `classifiers`, `fields`, and source locations to build their own
-models.
-
-Static Extract 输出提取结果，不负责图谱建边、业务链路推理，也不决定 facts 应该如何关联。图谱平台、RAG 索引、API 目录、治理工具或其他下游系统可以使用 `factType`、`classifiers`、`fields` 和源码位置构建自己的模型。
-
 ## Discovery
 
 Rulesets cannot cover every company-specific framework or wrapper. The system
@@ -441,7 +431,7 @@ React TSX Button
   -> extracted records JSONL
 ```
 
-This loop proves the multi-language extraction direction without moving graph
-linking or flow reasoning into this project.
+This loop proves the multi-language extraction direction with a concrete
+end-to-end extraction result.
 
-这个闭环可以证明多语言提取方向，同时不把图谱关联或链路推理放进本项目。
+这个闭环用一个具体的端到端提取结果证明多语言提取方向。
