@@ -13,6 +13,8 @@ JSON output shape.
 - `ser/Ser.g4` defines the SER grammar used by runtime parser implementations.
 - `ser/SER_SPEC.md` defines the SER language semantics and conformance rules.
 - `cli/runtime-cli.md` defines the command shape each runtime CLI should expose.
+- `examples/` contains executable compatibility examples with rules, sources,
+  and expected JSONL output.
 
 ## Runtime Relationship
 
@@ -38,13 +40,15 @@ The stable integration point across languages is JSON, not a shared Java jar.
 Runtimes should reference files in this directory from tests and release
 checks. The spec is not only documentation.
 
-The Java CLI test currently reads:
+The Java CLI tests currently read:
 
 ```text
 spec/schema/extracted-fact.schema.json
+spec/examples/java/*
 ```
 
-and validates JSONL produced by `static-extract-java run` against that schema.
+They validate JSONL produced by `static-extract-java run` against the schema and
+compare it with example `expected.jsonl` files.
 
 The Java parser build copies:
 
