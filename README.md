@@ -152,17 +152,20 @@ Recommended install for normal users:
 普通用户推荐安装方式：
 
 ```bash
-curl -L -o static-extract-java.zip \
-  https://github.com/praha-poseidon/java-static-extract/releases/latest/download/static-extract-java.zip
-unzip static-extract-java.zip
-export PATH="$PWD/static-extract-java/bin:$PATH"
+curl -L -o static-extract.zip \
+  https://github.com/praha-poseidon/java-static-extract/releases/latest/download/static-extract.zip
+unzip static-extract.zip
+cd static-extract-*
+bash install.sh
 static-extract-java --help
+static-extract-ts --help
 ```
 
-The release package contains the CLI scripts and dependency jars. It does not
-need Maven on the target machine. It only needs JDK 21 or newer.
+The release package contains CLI scripts, Java dependency jars, TS runtime
+files, and agent skills. It does not need Maven or npm on the target machine.
+It only needs Java 21 or newer and Node.js 20 or newer.
 
-release 包已经包含 CLI 脚本和依赖 jar，目标机器不需要安装 Maven，只需要 JDK 21 或更新版本。
+release 包已经包含 CLI 脚本、Java 依赖 jar、TS runtime 文件和 agent skills。目标机器不需要安装 Maven 或 npm，只需要 Java 21 或更新版本，以及 Node.js 20 或更新版本。
 
 Source install for contributors:
 
@@ -209,6 +212,63 @@ Installed skills:
 If the command is not found after installation, add `~/.local/bin` to `PATH`.
 
 如果安装后找不到命令，把 `~/.local/bin` 加到 `PATH`。
+
+## Release Packaging
+
+发行包构建。
+
+Maintainers can build the release zip locally:
+
+维护者可以在本地构建发行包：
+
+```bash
+scripts/package-release.sh 0.0.1
+```
+
+This writes:
+
+会生成：
+
+```text
+dist/static-extract-0.0.1.zip
+dist/static-extract.zip
+```
+
+The release package layout is:
+
+发行包结构：
+
+```text
+static-extract-0.0.1/
+  bin/
+    static-extract-java
+    static-extract-ts
+  repo/
+    Java CLI jars and dependencies
+  runtime-ts/
+    bin/
+    src/
+    rules/
+  skills/
+    static-extract-java/
+    ser-author/
+  spec/
+  install.sh
+```
+
+GitHub Release is automated by `.github/workflows/release.yml`. To publish:
+
+GitHub Release 由 `.github/workflows/release.yml` 自动完成。发布方式：
+
+```bash
+git tag v0.0.1
+git push origin v0.0.1
+```
+
+The workflow runs Java and TS tests, builds the release package, creates a
+GitHub Release, and uploads `static-extract.zip`.
+
+workflow 会运行 Java 和 TS 测试，构建发行包，创建 GitHub Release，并上传 `static-extract.zip`。
 
 Source install prerequisites:
 

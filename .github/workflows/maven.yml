@@ -16,4 +16,9 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - run: mvn -B verify
+      - run: npm test
+        working-directory: static-extract-runtime-ts
