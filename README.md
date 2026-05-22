@@ -1,10 +1,10 @@
 # Static Extract
 
 Static Extract provides a language-neutral SER spec and per-language runtimes
-for extracting static facts from source code. The current implemented runtime
-is Java/JDT.
+for extracting static facts from source code. The current implemented runtimes
+are Java/JDT and a minimal React/TS runtime.
 
-Static Extract 提供一套语言无关的 SER 规范，以及面向不同语言的 runtime，用来从源码中静态提取信息。当前已经实现的 runtime 是 Java/JDT。
+Static Extract 提供一套语言无关的 SER 规范，以及面向不同语言的 runtime，用来从源码中静态提取信息。当前已经实现 Java/JDT runtime，以及一个最小 React/TS runtime。
 
 It is designed for AI coding agents and other automation that needs reliable
 static facts instead of fragile text search.
@@ -77,10 +77,11 @@ Static Extract 当前可以做这些事：
   resolver, or JDT trace resolver.
 - 允许用户提供自己的提取规则、trace 规则、外部值解析器，或者自定义 JDT trace 解析逻辑。
 
-The runtime module does not ship framework rules by default. Framework examples
-such as Spring MVC and RestTemplate live in `static-extract-examples-java`.
+The Java runtime ships Java/JDT built-in rules such as Spring MVC,
+RestTemplate, and Spring config extraction. The TS runtime currently ships a
+minimal React button text rule.
 
-runtime 模块默认不内置框架规则。Spring MVC、RestTemplate 这类规则放在 `static-extract-examples-java` 里作为示例。
+Java runtime 内置 Java/JDT 规则，例如 Spring MVC、RestTemplate、Spring config 提取。TS runtime 当前内置一个最小 React button 文案规则。
 
 ## Modules
 
@@ -107,10 +108,17 @@ static-extract-runtime-java-cli
   Picocli based command line entry point over the assistant workflow API.
   基于 picocli 的命令行入口，底层调用 assistant 工作流 API。
 
+static-extract-runtime-ts
+  Node-based CLI and minimal React/TS runtime.
+  基于 Node 的 CLI 和最小 React/TS runtime。
+
+skills/ser-author
+  Agent Skill for generating SER and orchestrating CLI extraction.
+  用于生成 SER 并编排 CLI 提取的 Agent Skill。
+
 static-extract-examples-java
-  Example SER rules. This module is optional and is not required by the JDT
-  runtime.
-  示例规则模块，是可选模块；JDT runtime 不依赖它，也不会默认内置这些框架规则。
+  Runnable Java example project.
+  可运行的 Java 示例项目。
 ```
 
 ## CLI
@@ -172,11 +180,31 @@ If the downloaded file is not executable, run it through `bash`:
 bash install.sh
 ```
 
-This builds the CLI from source, links `static-extract-java` into
-`~/.local/bin`, and installs the agent skill into
-`~/.codex/skills/static-extract-java` and `~/.claude/skills/static-extract-java`.
+This builds the Java CLI from source, links both CLI commands into
+`~/.local/bin`, and installs the agent skills into Codex and Claude skill
+directories.
 
-它会从源码构建 CLI，把 `static-extract-java` 命令链接到 `~/.local/bin`，并把 agent skill 安装到 `~/.codex/skills/static-extract-java` 和 `~/.claude/skills/static-extract-java`。
+它会从源码构建 Java CLI，把两个 CLI 命令链接到 `~/.local/bin`，并把 agent skills 安装到 Codex 和 Claude 的 skills 目录。
+
+Installed commands:
+
+安装后的命令：
+
+```text
+static-extract-java
+static-extract-ts
+```
+
+Installed skills:
+
+安装后的 Skill：
+
+```text
+~/.codex/skills/static-extract-java
+~/.codex/skills/ser-author
+~/.claude/skills/static-extract-java
+~/.claude/skills/ser-author
+```
 
 If the command is not found after installation, add `~/.local/bin` to `PATH`.
 
@@ -189,12 +217,14 @@ Source install prerequisites:
 ```text
 JDK 21 or newer
 Maven 3.8+ or a project Maven wrapper
+Node.js 20 or newer
 Network access to Maven repositories, unless dependencies are already cached
 ```
 
 ```text
 JDK 21 或更新版本
 Maven 3.8+，或者项目自带 Maven wrapper
+Node.js 20 或更新版本
 可以访问 Maven 仓库的网络，除非依赖已经在本机缓存
 ```
 
@@ -206,6 +236,15 @@ On locked-down corporate machines, common fixes are:
 # Install only the CLI and skip agent skill installation.
 ./install.sh --no-skills
 
+# Install only skills.
+./install.sh --no-cli
+
+# Install Java CLI only.
+./install.sh --no-ts-cli
+
+# Install TS CLI only.
+./install.sh --no-java-cli
+
 # Install into a writable directory when ~/.local/bin is restricted.
 ./install.sh --bin-dir "$HOME/bin"
 
@@ -216,6 +255,15 @@ On locked-down corporate machines, common fixes are:
 ```bash
 # 只安装 CLI，跳过 agent skill 安装。
 ./install.sh --no-skills
+
+# 只安装 skills。
+./install.sh --no-cli
+
+# 只安装 Java CLI。
+./install.sh --no-ts-cli
+
+# 只安装 TS CLI。
+./install.sh --no-java-cli
 
 # 如果 ~/.local/bin 受限，安装到一个可写目录。
 ./install.sh --bin-dir "$HOME/bin"

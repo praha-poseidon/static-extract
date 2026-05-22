@@ -2,8 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BIN_DIR="${STATIC_EXTRACT_JAVA_BIN_DIR:-${JAVA_STATIC_EXTRACT_BIN_DIR:-$HOME/.local/bin}}"
-INSTALL_CLI=1
+BIN_DIR="${STATIC_EXTRACT_BIN_DIR:-${STATIC_EXTRACT_JAVA_BIN_DIR:-${JAVA_STATIC_EXTRACT_BIN_DIR:-$HOME/.local/bin}}}"
+INSTALL_JAVA_CLI=1
+INSTALL_TS_CLI=1
 INSTALL_SKILLS=1
 MVN_CMD=""
 
@@ -12,14 +13,17 @@ usage() {
 Usage: ./install.sh [options]
 
 Options:
-  --bin-dir DIR       Install the static-extract-java command into DIR.
-  --no-cli            Do not build or install the CLI command.
+  --bin-dir DIR       Install CLI commands into DIR.
+  --no-cli            Do not build or install CLI commands.
+  --no-java-cli       Do not build or install static-extract-java.
+  --no-ts-cli         Do not install static-extract-ts.
   --no-skills         Do not install Codex/Claude skills.
   -h, --help          Show this help.
 
 Environment:
-  STATIC_EXTRACT_JAVA_BIN_DIR      Default Java runtime CLI install directory.
-  JAVA_STATIC_EXTRACT_BIN_DIR      Legacy alias for the CLI install directory.
+  STATIC_EXTRACT_BIN_DIR           Default CLI install directory.
+  STATIC_EXTRACT_JAVA_BIN_DIR      Legacy Java runtime CLI install directory.
+  JAVA_STATIC_EXTRACT_BIN_DIR      Legacy alias for the Java CLI install directory.
   CODEX_SKILLS_DIR                 Default: ~/.codex/skills
   CLAUDE_SKILLS_DIR                Default: ~/.claude/skills
 USAGE
@@ -37,7 +41,16 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --no-cli)
-      INSTALL_CLI=0
+      INSTALL_JAVA_CLI=0
+      INSTALL_TS_CLI=0
+      shift
+      ;;
+    --no-java-cli)
+      INSTALL_JAVA_CLI=0
+      shift
+      ;;
+    --no-ts-cli)
+      INSTALL_TS_CLI=0
       shift
       ;;
     --no-skills)
@@ -81,6 +94,9 @@ java_major_version() {
   local version
   version="$("$1" -version 2>&1 | sed -n 's/.*version "\([^"]*\)".*/\1/p' | head -n 1)"
   if [[ -z "$version" ]]; then
+    version="$("$1" -version 2>&1 | awk '{print $2}' | head -n 1)"
+  fi
+  if [[ -z "$version" ]]; then
     return 1
   fi
   if [[ "$version" == 1.* ]]; then
@@ -102,7 +118,17 @@ check_cli_prerequisites() {
   fi
 }
 
-install_cli() {
+check_ts_prerequisites() {
+  command_exists node || die "Node.js was not found. Install Node.js 20 or newer and make sure node is on PATH."
+
+  local major
+  major="$(node -p 'Number(process.versions.node.split(".")[0])' 2>/dev/null || true)"
+  if [[ -z "$major" || "$major" -lt 20 ]]; then
+    die "Node.js 20 or newer is required. Current node version is: $(node --version 2>&1)"
+  fi
+}
+
+install_java_cli() {
   check_cli_prerequisites
   echo "Building static-extract Java runtime CLI..."
   (cd "$ROOT_DIR" && "$MVN_CMD" -pl static-extract-runtime-java-cli -am package)
@@ -122,10 +148,29 @@ install_cli() {
   echo "Installed command: $BIN_DIR/static-extract-java"
 }
 
+install_ts_cli() {
+  check_ts_prerequisites
+
+  local source_bin="$ROOT_DIR/static-extract-runtime-ts/bin/static-extract-ts.mjs"
+  if [[ ! -f "$source_bin" ]]; then
+    die "TS CLI script was not found: $source_bin"
+  fi
+
+  chmod +x "$source_bin"
+  mkdir -p "$BIN_DIR"
+  if ! ln -sfn "$source_bin" "$BIN_DIR/static-extract-ts" 2>/dev/null; then
+    echo "Symlink failed. Copying the command script instead..."
+    cp "$source_bin" "$BIN_DIR/static-extract-ts"
+    chmod +x "$BIN_DIR/static-extract-ts"
+  fi
+  echo "Installed command: $BIN_DIR/static-extract-ts"
+}
+
 install_skill_dir() {
   local target_root="$1"
-  local source_dir="$ROOT_DIR/skills/static-extract-java"
-  local target_dir="$target_root/static-extract-java"
+  local skill_name="$2"
+  local source_dir="$ROOT_DIR/skills/$skill_name"
+  local target_dir="$target_root/$skill_name"
 
   if [[ ! -d "$source_dir" ]]; then
     die "Skill source directory was not found: $source_dir"
@@ -140,12 +185,18 @@ install_skills() {
   local codex_dir="${CODEX_SKILLS_DIR:-$HOME/.codex/skills}"
   local claude_dir="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 
-  install_skill_dir "$codex_dir"
-  install_skill_dir "$claude_dir"
+  install_skill_dir "$codex_dir" "static-extract-java"
+  install_skill_dir "$codex_dir" "ser-author"
+  install_skill_dir "$claude_dir" "static-extract-java"
+  install_skill_dir "$claude_dir" "ser-author"
 }
 
-if [[ "$INSTALL_CLI" -eq 1 ]]; then
-  install_cli
+if [[ "$INSTALL_JAVA_CLI" -eq 1 ]]; then
+  install_java_cli
+fi
+
+if [[ "$INSTALL_TS_CLI" -eq 1 ]]; then
+  install_ts_cli
 fi
 
 if [[ "$INSTALL_SKILLS" -eq 1 ]]; then
@@ -158,7 +209,8 @@ Done.
 
 Try:
   static-extract-java --help
+  static-extract-ts --help
 
-If the command is not found, add this to your shell profile:
+If commands are not found, add this to your shell profile:
   export PATH="$BIN_DIR:\$PATH"
 EOF
