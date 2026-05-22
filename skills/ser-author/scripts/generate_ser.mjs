@@ -3,7 +3,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
-const REACT_BUTTON_SER = `rule "React Button Text"
+export const REACT_BUTTON_SER = `rule "React Button Text"
 fact ui_text
 
 find jsx button
@@ -29,7 +29,7 @@ async function main(argv) {
   await writeFile(options.out, ser, "utf8");
 }
 
-function generateSer(runtime, request) {
+export function generateSer(runtime, request) {
   const normalized = request.toLowerCase();
   if (runtime === "react" && hasAny(normalized, ["button", "按钮"]) && hasAny(normalized, ["text", "文案", "中文"])) {
     return REACT_BUTTON_SER;
@@ -70,11 +70,12 @@ function requireValue(argv, index, option) {
   return value;
 }
 
-main(process.argv.slice(2)).catch((error) => {
-  process.stderr.write(JSON.stringify({
-    status: "ERROR",
-    message: error.message
-  }) + "\n");
-  process.exitCode = 1;
-});
-
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main(process.argv.slice(2)).catch((error) => {
+    process.stderr.write(JSON.stringify({
+      status: "ERROR",
+      message: error.message
+    }) + "\n");
+    process.exitCode = 1;
+  });
+}

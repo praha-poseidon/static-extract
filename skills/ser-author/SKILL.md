@@ -5,19 +5,21 @@ description: Generate Static Extract SER rules from natural-language extraction 
 
 # SER Author
 
-Use this skill when the user asks to create, draft, generate, review, or validate
-Static Extract SER rules.
+Use this skill when the user asks to generate SER, run Static Extract against a
+project, or do both as one extraction workflow.
 
 ## Workflow
 
-1. Identify the target runtime: Java/JDT, React/TS, or another runtime.
+1. Identify the target runtime from the project or user request: Java/JDT,
+   React/TS, or another runtime.
 2. Read the matching vocabulary reference before writing SER:
    - Java/JDT: `references/java-jdt-vocabulary.md`
    - React/TS: `references/react-ts-vocabulary.md`
 3. Generate one `.ser` file containing the needed `rule` and optional `trace`
    blocks. Do not split rule and trace into separate files unless the user asks.
-4. If source code is available, run the appropriate CLI with the generated SER
-   and validate the JSONL output against `spec/schema/extracted-fact.schema.json`.
+4. If source code is available and the user wants extraction, run the matching
+   CLI with the generated or provided SER and validate the JSONL output against
+   `spec/schema/extracted-fact.schema.json`.
 
 ## Guardrails
 
@@ -31,7 +33,9 @@ Static Extract SER rules.
 
 ## Deterministic Helper
 
-For repeatable tests or simple supported prompts, use:
+For repeatable tests or simple supported prompts, use one of these helpers.
+
+Generate SER only:
 
 ```bash
 node skills/ser-author/scripts/generate_ser.mjs \
@@ -40,6 +44,21 @@ node skills/ser-author/scripts/generate_ser.mjs \
   --out generated.ser
 ```
 
-The helper currently supports React button text extraction. For other requests,
-author the SER directly from the vocabulary reference.
+Generate SER and run the right CLI:
 
+```bash
+node skills/ser-author/scripts/run_static_extract.mjs \
+  --project ./my-react-project \
+  --mode generate-and-extract \
+  --request request.txt \
+  --out-dir .static-extract
+```
+
+Supported modes:
+
+- `generate`: write a `.ser` file only.
+- `extract`: run extraction with an existing `--rule`.
+- `generate-and-extract`: generate SER, run CLI, and write `facts.jsonl`.
+
+The helpers currently support React button text extraction. For other requests,
+author the SER directly from the vocabulary reference, then use the relevant CLI.
