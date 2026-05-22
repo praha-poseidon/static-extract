@@ -1,0 +1,1 @@
+提取 React 按钮点击动作和 onClick handler。

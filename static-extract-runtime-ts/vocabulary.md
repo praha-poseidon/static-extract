@@ -18,6 +18,7 @@ Supported source expressions:
 
 ```ser
 from jsx button take text
+from prop onClick take reference
 from call take method
 from call take name
 from call take owner
@@ -31,6 +32,8 @@ Current behavior:
 - Extracts literal text, for example `<button>Save</button>` -> `Save`.
 - Extracts simple expression text as a symbolic label, for example
   `<button>{submitText}</button>` -> `{submitText}`.
+- Extracts simple `onClick` handler references from button props, for example
+  `<button onClick={handleSave}>Save</button>` -> `handleSave`.
 - Emits `enclosingSymbol` when the button appears inside a function component
   such as `function App()`.
 - Matches `fetch("/path")`.
@@ -42,6 +45,7 @@ Recommended fact:
 
 ```ser
 fact ui_text
+fact ui_action
 fact frontend_api_call
 ```
 
@@ -51,7 +55,9 @@ Recommended build fields:
 build {
   component: "react"
   kind: "button"
+  event: "click"
   text: label
+  handler: handler
 }
 ```
 

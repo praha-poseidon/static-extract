@@ -18,6 +18,26 @@ build {
 }
 `;
 
+export const REACT_BUTTON_ACTION_SER = `rule "React Button Action"
+fact ui_action
+
+find jsx button
+
+let label =
+  from jsx button take text
+
+let handler =
+  from prop onClick take reference
+
+build {
+  component: "react"
+  kind: "button"
+  event: "click"
+  text: label
+  handler: handler
+}
+`;
+
 export const REACT_FETCH_API_SER = `rule "Fetch API Call"
 fact frontend_api_call
 
@@ -97,6 +117,9 @@ async function main(argv) {
 
 export function generateSer(runtime, request) {
   const normalized = request.toLowerCase();
+  if (runtime === "react" && hasAny(normalized, ["action", "动作", "点击", "onclick", "handler", "处理函数"])) {
+    return REACT_BUTTON_ACTION_SER;
+  }
   if (runtime === "react" && hasAny(normalized, ["button", "按钮"]) && hasAny(normalized, ["text", "文案", "中文"])) {
     return REACT_BUTTON_SER;
   }

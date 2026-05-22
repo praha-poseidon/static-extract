@@ -171,18 +171,25 @@ function matchRequired(source, regex, label, file) {
 
 function extractReactButtons(rule, source, sourceFile, projectRoot) {
   const results = [];
-  const buttonPattern = /<button\b[^>]*>([\s\S]*?)<\/button>/g;
+  const buttonPattern = /<button\b([^>]*)>([\s\S]*?)<\/button>/g;
   let match;
   while ((match = buttonPattern.exec(source)) !== null) {
-    const label = readButtonText(match[1]);
+    const label = readButtonText(match[2]);
     if (!label) {
       continue;
     }
+    const handler = readButtonHandler(match[1]);
     const startLine = lineAt(source, match.index);
     const endLine = lineAt(source, match.index + match[0].length - 1);
     const fields = {};
     for (const [name, value] of Object.entries(rule.fields)) {
-      fields[name] = typeof value === "object" && value.ref === "label" ? label : value;
+      if (typeof value === "object" && value.ref === "label") {
+        fields[name] = label;
+      } else if (typeof value === "object" && value.ref === "handler") {
+        fields[name] = handler;
+      } else {
+        fields[name] = value;
+      }
     }
     results.push({
       rule: rule.name,
@@ -309,6 +316,23 @@ function readButtonText(inner) {
   return inner.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 }
 
+function readButtonHandler(attributes) {
+  const match = attributes.match(/\bonClick\s*=\s*\{\s*([^}]+?)\s*\}/);
+  if (!match) {
+    return "";
+  }
+  return normalizeHandlerReference(match[1].trim());
+}
+
+function normalizeHandlerReference(value) {
+  const callThrough = value.match(/^\(\s*\)\s*=>\s*([A-Za-z_$][\w$.]*)\s*\(/);
+  if (callThrough) {
+    return callThrough[1];
+  }
+  const identifier = value.match(/^([A-Za-z_$][\w$.]*)$/);
+  return identifier ? identifier[1] : `{${value}}`;
+}
+
 async function collectSourceFacts(sourceFiles, projectRoot) {
   const facts = [];
   for (const sourceFile of sourceFiles) {
@@ -316,10 +340,12 @@ async function collectSourceFacts(sourceFiles, projectRoot) {
     const buttonPattern = /<button\b([^>]*)>([\s\S]*?)<\/button>/g;
     let match;
     while ((match = buttonPattern.exec(source)) !== null) {
+      const handler = readButtonHandler(match[1]);
       facts.push({
         kind: "jsx",
         name: "button",
         text: readButtonText(match[2]),
+        events: handler ? { onClick: handler } : {},
         raw: match[0],
         projectFilePath: projectFilePath(sourceFile, projectRoot),
         absoluteFilePath: sourceFile,

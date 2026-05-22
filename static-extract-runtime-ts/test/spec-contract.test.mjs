@@ -54,6 +54,10 @@ for (const example of examples) {
 }
 
 function assertExample(example) {
+  const expectedLines = readFileSync(resolve(example, "expected.jsonl"), "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line.replaceAll("${EXAMPLE_DIR}", example)));
   const output = resolve(mkdtempSync(resolve(tmpdir(), "static-extract-ts-")), "facts.jsonl");
   const tryReport = execFileSync("node", [
     resolve(root, "bin/static-extract-ts.mjs"),
@@ -63,7 +67,7 @@ function assertExample(example) {
     "--rule", resolve(example, "rule.ser")
   ], { encoding: "utf8" });
   assert.match(tryReport, /"status": "MATCH"/);
-  assert.match(tryReport, /"resultCount": 2/);
+  assert.match(tryReport, new RegExp(`"resultCount": ${expectedLines.length}`));
 
   const missingRule = resolve(mkdtempSync(resolve(tmpdir(), "static-extract-ts-rule-")), "missing.ser");
   writeFileSync(missingRule, `rule "Missing JSX"
@@ -90,20 +94,16 @@ build {
   assert.match(diagnoseReport, /"name": "button"/);
 
   const report = execFileSync("node", [
-  resolve(root, "bin/static-extract-ts.mjs"),
-  "run",
-  "--project", example,
-  "--source", resolve(example, "input"),
-  "--rule", resolve(example, "rule.ser"),
-  "--out", output
+    resolve(root, "bin/static-extract-ts.mjs"),
+    "run",
+    "--project", example,
+    "--source", resolve(example, "input"),
+    "--rule", resolve(example, "rule.ser"),
+    "--out", output
   ], { encoding: "utf8" });
-  assert.match(report, /"resultCount": 2/);
+  assert.match(report, new RegExp(`"resultCount": ${expectedLines.length}`));
 
   const actualLines = readFileSync(output, "utf8").trim().split("\n").map((line) => JSON.parse(line));
-  const expectedLines = readFileSync(resolve(example, "expected.jsonl"), "utf8")
-    .trim()
-    .split("\n")
-    .map((line) => JSON.parse(line.replaceAll("${EXAMPLE_DIR}", example)));
   const schema = JSON.parse(readFileSync(schemaFile, "utf8"));
   for (const record of actualLines) {
     assertExtractedFactShape(record, schema);

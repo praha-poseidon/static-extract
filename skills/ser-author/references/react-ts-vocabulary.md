@@ -21,6 +21,27 @@ build {
 ```
 
 ```ser
+rule "React Button Action"
+fact ui_action
+
+find jsx button
+
+let label =
+  from jsx button take text
+
+let handler =
+  from prop onClick take reference
+
+build {
+  component: "react"
+  kind: "button"
+  event: "click"
+  text: label
+  handler: handler
+}
+```
+
+```ser
 rule "Axios API Call"
 fact frontend_api_call
 
@@ -43,6 +64,8 @@ Use this for requests such as:
 
 - extract React button text
 - extract Chinese text from React buttons
+- extract React button click actions
+- list onClick handlers for buttons
 - list button labels in `.tsx` or `.jsx` files
 - extract frontend API calls from fetch or axios
 - list API paths used by React pages
