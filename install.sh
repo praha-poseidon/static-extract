@@ -131,9 +131,9 @@ check_ts_prerequisites() {
 install_java_cli() {
   check_cli_prerequisites
   echo "Building static-extract Java runtime CLI..."
-  (cd "$ROOT_DIR" && "$MVN_CMD" -pl static-extract-runtime-java-cli -am package)
+  (cd "$ROOT_DIR" && "$MVN_CMD" -pl java/cli -am package)
 
-  local source_bin="$ROOT_DIR/static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java"
+  local source_bin="$ROOT_DIR/java/cli/target/appassembler/bin/static-extract-java"
   if [[ ! -x "$source_bin" ]]; then
     echo "CLI script was not generated: $source_bin" >&2
     exit 1
@@ -151,14 +151,14 @@ install_java_cli() {
 install_ts_cli() {
   check_ts_prerequisites
 
-  local source_bin="$ROOT_DIR/static-extract-runtime-ts/bin/static-extract-ts.mjs"
+  local source_bin="$ROOT_DIR/ts/runtime/bin/static-extract-ts.mjs"
   if [[ ! -f "$source_bin" ]]; then
     die "TS CLI script was not found: $source_bin"
   fi
-  if [[ ! -d "$ROOT_DIR/static-extract-runtime-ts/node_modules/ts-morph" ]]; then
+  if [[ ! -d "$ROOT_DIR/ts/runtime/node_modules/ts-morph" ]]; then
     command_exists npm || die "npm was not found. Source install needs npm to install TS runtime dependencies."
     echo "Installing static-extract-ts dependencies..."
-    (cd "$ROOT_DIR/static-extract-runtime-ts" && npm install)
+    (cd "$ROOT_DIR/ts/runtime" && npm install)
   fi
 
   chmod +x "$source_bin"

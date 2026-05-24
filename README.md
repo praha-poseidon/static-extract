@@ -85,38 +85,38 @@ Java runtime 内置 Java/JDT 规则，例如 Spring MVC、RestTemplate、Spring 
 
 ## Modules
 
-项目分为语言无关规范、Java 实现模块和 Java runtime 模块。未来 TS runtime 只需要实现 `spec/`，不需要依赖 Java jar。
+项目现在按 `spec/`、`java/`、`ts/`、`skills/` 和发布安装脚本分层。每个语言 runtime 自己实现 `spec/`，不通过 Java jar 互相调用。
 
 ```text
 spec
   Language-neutral SER, CLI, and JSON schema contracts.
   语言无关的 SER、CLI 和 JSON Schema 契约。
 
-static-extract-core-java
+java/core
   Java implementation of SER parsing, rule models, and Java runtime contracts.
   SER 解析、规则模型和 Java runtime contract 的 Java 实现。
 
-static-extract-runtime-java-jdt
+java/jdt
   Eclipse JDT based runtime, loaders, value tracing, and build evaluators.
   基于 Eclipse JDT 执行规则，负责加载规则、追踪值、计算 build 输出。
 
-static-extract-runtime-java-assistant
+java/assistant
   Agent-facing workflow API: init, try, diagnose, and run.
   面向 agent 的工作流 API：init、try、diagnose、run。
 
-static-extract-runtime-java-cli
+java/cli
   Picocli based command line entry point over the assistant workflow API.
   基于 picocli 的命令行入口，底层调用 assistant 工作流 API。
 
-static-extract-runtime-ts
-  Node-based CLI and React/TS runtime.
-  基于 Node 的 CLI 和 React/TS runtime。
+ts/runtime
+  Node-based CLI and TypeScript/JavaScript AST runtime.
+  基于 Node 的 CLI 和 TypeScript/JavaScript AST runtime。
 
 skills/ser-author
   Agent Skill for generating SER and orchestrating CLI extraction.
   用于生成 SER 并编排 CLI 提取的 Agent Skill。
 
-static-extract-examples-java
+java/examples
   Runnable Java example project.
   可运行的 Java 示例项目。
 ```
@@ -336,7 +336,7 @@ Manual build:
 手动构建：
 
 ```bash
-mvn -pl static-extract-runtime-java-cli -am package
+mvn -pl java/cli -am package
 ```
 
 The package step creates a normal command script:
@@ -344,7 +344,7 @@ The package step creates a normal command script:
 package 会生成一个普通命令脚本：
 
 ```text
-static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java
+java/cli/target/appassembler/bin/static-extract-java
 ```
 
 Available commands:
@@ -404,20 +404,20 @@ Example:
 示例：
 
 ```bash
-static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java init \
+java/cli/target/appassembler/bin/static-extract-java init \
   --project /my-project
 
-static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java try \
+java/cli/target/appassembler/bin/static-extract-java try \
   --project /my-project \
   --file /my-project/src/main/java/demo/Api.java \
   --rule /my-project/.ser/generated/http.ser
 
-static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java diagnose \
+java/cli/target/appassembler/bin/static-extract-java diagnose \
   --project /my-project \
   --file /my-project/src/main/java/demo/Api.java \
   --rule /my-project/.ser/generated/http.ser
 
-static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java run \
+java/cli/target/appassembler/bin/static-extract-java run \
   --project /my-project \
   --rule /my-project/.ser/generated/http.ser \
   --out /my-project/.ser/result/extract.jsonl
@@ -428,7 +428,7 @@ static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java run 
 如果不想让 runner 从项目根目录推断，也可以显式传输入：
 
 ```bash
-static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java run \
+java/cli/target/appassembler/bin/static-extract-java run \
   --source /my-project/src/main/java \
   --classes /my-project/target/classes \
   --dependency /my-project/target/dependency \

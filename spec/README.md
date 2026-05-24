@@ -22,15 +22,18 @@ JSON output shape.
 spec/
   Language-neutral SER, CLI, and JSON contracts.
 
-static-extract-core-java
+java/core
   Java implementation of SER parsing and Java rule model classes.
 
-static-extract-runtime-java-*
-  Java/JDT runtime and Java CLI. Depends on static-extract-core-java.
+java/jdt
+  Java/JDT runtime. Depends on java/core.
 
-future static-extract-runtime-ts-*
+java/cli
+  Java CLI over the Java/JDT runtime.
+
+ts/runtime
   TypeScript runtime and TypeScript CLI. Implements spec directly in TS.
-  Does not depend on static-extract-core-java.
+  Does not depend on java/core.
 ```
 
 The stable integration point across languages is JSON, not a shared Java jar.

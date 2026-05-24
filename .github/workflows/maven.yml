@@ -21,6 +21,6 @@ jobs:
           node-version: "20"
       - run: mvn -B verify
       - run: npm ci
-        working-directory: static-extract-runtime-ts
+        working-directory: ts/runtime
       - run: npm test
-        working-directory: static-extract-runtime-ts
+        working-directory: ts/runtime

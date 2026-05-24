@@ -1,6 +1,6 @@
 # React/TS Vocabulary
 
-Source of truth: `static-extract-runtime-ts/vocabulary.md`.
+Source of truth: `ts/runtime/vocabulary.md`.
 
 Currently supported SER:
 

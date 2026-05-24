@@ -27,23 +27,23 @@ command_exists zip || {
 }
 
 echo "Building Java CLI distribution..."
-(cd "$ROOT_DIR" && mvn -B -pl static-extract-runtime-java-cli -am package)
+(cd "$ROOT_DIR" && mvn -B -pl java/cli -am package)
 
 echo "Installing TS runtime dependencies..."
-(cd "$ROOT_DIR/static-extract-runtime-ts" && npm ci)
+(cd "$ROOT_DIR/ts/runtime" && npm ci)
 
 echo "Assembling release package: $PACKAGE_NAME"
 rm -rf "$PACKAGE_DIR"
 mkdir -p "$PACKAGE_DIR/bin" "$PACKAGE_DIR/runtime-ts" "$DIST_DIR"
 
-cp -R "$ROOT_DIR/static-extract-runtime-java-cli/target/appassembler/bin/." "$PACKAGE_DIR/bin/"
-cp -R "$ROOT_DIR/static-extract-runtime-java-cli/target/appassembler/repo" "$PACKAGE_DIR/repo"
-cp -R "$ROOT_DIR/static-extract-runtime-ts/bin" "$PACKAGE_DIR/runtime-ts/"
-cp -R "$ROOT_DIR/static-extract-runtime-ts/src" "$PACKAGE_DIR/runtime-ts/"
-cp -R "$ROOT_DIR/static-extract-runtime-ts/rules" "$PACKAGE_DIR/runtime-ts/"
-cp -R "$ROOT_DIR/static-extract-runtime-ts/node_modules" "$PACKAGE_DIR/runtime-ts/"
-cp "$ROOT_DIR/static-extract-runtime-ts/package.json" "$PACKAGE_DIR/runtime-ts/"
-cp "$ROOT_DIR/static-extract-runtime-ts/package-lock.json" "$PACKAGE_DIR/runtime-ts/"
+cp -R "$ROOT_DIR/java/cli/target/appassembler/bin/." "$PACKAGE_DIR/bin/"
+cp -R "$ROOT_DIR/java/cli/target/appassembler/repo" "$PACKAGE_DIR/repo"
+cp -R "$ROOT_DIR/ts/runtime/bin" "$PACKAGE_DIR/runtime-ts/"
+cp -R "$ROOT_DIR/ts/runtime/src" "$PACKAGE_DIR/runtime-ts/"
+cp -R "$ROOT_DIR/ts/runtime/rules" "$PACKAGE_DIR/runtime-ts/"
+cp -R "$ROOT_DIR/ts/runtime/node_modules" "$PACKAGE_DIR/runtime-ts/"
+cp "$ROOT_DIR/ts/runtime/package.json" "$PACKAGE_DIR/runtime-ts/"
+cp "$ROOT_DIR/ts/runtime/package-lock.json" "$PACKAGE_DIR/runtime-ts/"
 cp -R "$ROOT_DIR/skills" "$PACKAGE_DIR/skills"
 cp -R "$ROOT_DIR/spec" "$PACKAGE_DIR/spec"
 cp "$ROOT_DIR/README.md" "$ROOT_DIR/LICENSE" "$PACKAGE_DIR/"

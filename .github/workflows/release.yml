@@ -29,7 +29,7 @@ jobs:
 
       - name: Test TS runtime
         run: npm ci && npm test
-        working-directory: static-extract-runtime-ts
+        working-directory: ts/runtime
 
       - name: Package release distribution
         run: scripts/package-release.sh "${GITHUB_REF_NAME#v}"

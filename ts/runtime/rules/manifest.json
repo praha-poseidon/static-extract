@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../spec/schema/rule-manifest.schema.json",
+  "name": "static-extract-ts-builtin",
+  "runtime": "ts",
+  "version": "0.0.1",
+  "rules": [
+    "react/axios-api-call.ser",
+    "react/fetch-api-call.ser",
+    "react/react-button-text.ser"
+  ],
+  "traceRules": []
+}

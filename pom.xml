@@ -83,11 +83,11 @@
   </dependencyManagement>
 
   <modules>
-    <module>static-extract-core-java</module>
-    <module>static-extract-runtime-java-jdt</module>
-    <module>static-extract-runtime-java-assistant</module>
-    <module>static-extract-runtime-java-cli</module>
-    <module>static-extract-examples-java</module>
+    <module>java/core</module>
+    <module>java/jdt</module>
+    <module>java/assistant</module>
+    <module>java/cli</module>
+    <module>java/examples</module>
   </modules>
 
   <build>

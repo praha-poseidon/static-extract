@@ -47,9 +47,9 @@ It currently runs against:
 | Quarkus Quickstarts | JAX-RS SER rules | 527 records |
 | Quarkus Quickstarts | JAX-RS + ConfigProperty trace + external dictionary | 569 records, including 42 config field records |
 
-The benchmark rules live in the consumer project, not in `static-extract-runtime-java-jdt`.
+The benchmark rules live in the consumer project, not in `java/jdt`.
 
-这些验证规则放在 consumer 工程里，不内置到 `static-extract-runtime-java-jdt`。
+这些验证规则放在 consumer 工程里，不内置到 `java/jdt`。
 
 ## What This Proves
 

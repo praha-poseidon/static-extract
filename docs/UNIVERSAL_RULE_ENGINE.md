@@ -157,10 +157,10 @@ Initial runtime targets:
 初始 runtime 目标：
 
 ```text
-static-extract-runtime-java-jdt
+java/jdt
   Java source through Eclipse JDT.
 
-static-extract-runtime-ts
+ts/runtime
   TypeScript and TSX through the TypeScript compiler API or ts-morph.
 
 static-extract-runtime-vue

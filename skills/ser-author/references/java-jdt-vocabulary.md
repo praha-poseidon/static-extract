@@ -1,6 +1,6 @@
 # Java/JDT Vocabulary
 
-Source of truth: `static-extract-runtime-java-jdt/vocabulary.md`.
+Source of truth: `java/jdt/vocabulary.md`.
 
 Common supported examples:
 

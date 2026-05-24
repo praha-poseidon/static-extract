@@ -63,7 +63,7 @@ async function detectRuntime(project) {
 
 function runExtract(runtime, project, rule, factsFile, options) {
   if (runtime === "react") {
-    const cli = options.cliTs ? resolve(options.cliTs) : resolve(repo, "static-extract-runtime-ts/bin/static-extract-ts.mjs");
+    const cli = options.cliTs ? resolve(options.cliTs) : resolve(repo, "ts/runtime/bin/static-extract-ts.mjs");
     const initReport = runJson("node", [
       cli,
       "init",
@@ -180,7 +180,7 @@ function javaCommand(options) {
       classpath: process.env.STATIC_EXTRACT_JAVA_CLASSPATH
     };
   }
-  const packaged = resolve(repo, "static-extract-runtime-java-cli/target/appassembler/bin/static-extract-java");
+  const packaged = resolve(repo, "java/cli/target/appassembler/bin/static-extract-java");
   if (existsSync(packaged)) {
     return {
       kind: "direct",
