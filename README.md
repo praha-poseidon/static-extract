@@ -134,15 +134,15 @@ Typical CLI workflow:
 典型 CLI 使用流程：
 
 ```text
-init      prepare a .ser workspace under the target Java project
-try       test one or more SER rules against selected Java files
+init      prepare a .ser workspace under the target project
+try       test one or more SER rules against selected source files
 diagnose  inspect source facts when a rule does not match
 run       execute stable rules against the whole project and write results
 ```
 
 ```text
-init      在目标 Java 项目下准备 .ser 工作区
-try       用指定 Java 文件试跑一份或多份 SER 规则
+init      在目标项目下准备 .ser 工作区
+try       用指定源码文件试跑一份或多份 SER 规则
 diagnose  规则没有命中时查看源码事实，辅助调整规则
 run       对完整项目执行稳定规则，并写出结果
 ```
@@ -249,6 +249,9 @@ static-extract-0.0.1/
     cli/
     extractor/
     rules/
+    node_modules/
+    package.json
+    package-lock.json
   skills/
     static-extract-java/
     ser-author/
@@ -278,14 +281,14 @@ Source install prerequisites:
 JDK 21 or newer
 Maven 3.8+ or a project Maven wrapper
 Node.js 20 or newer
-Network access to Maven repositories, unless dependencies are already cached
+Network access to Maven and npm registries, unless dependencies are cached
 ```
 
 ```text
 JDK 21 或更新版本
 Maven 3.8+，或者项目自带 Maven wrapper
 Node.js 20 或更新版本
-可以访问 Maven 仓库的网络，除非依赖已经在本机缓存
+可以访问 Maven 和 npm 仓库的网络，除非依赖已经在本机缓存
 ```
 
 On locked-down corporate machines, common fixes are:
@@ -308,8 +311,8 @@ On locked-down corporate machines, common fixes are:
 # Install into a writable directory when ~/.local/bin is restricted.
 ./install.sh --bin-dir "$HOME/bin"
 
-# If Maven dependencies cannot be downloaded, configure the company Maven mirror
-# in ~/.m2/settings.xml, then rerun install.
+# If Maven or npm dependencies cannot be downloaded, configure the company mirror
+# for the failing package manager, then rerun install.
 ```
 
 ```bash
@@ -328,7 +331,7 @@ On locked-down corporate machines, common fixes are:
 # 如果 ~/.local/bin 受限，安装到一个可写目录。
 ./install.sh --bin-dir "$HOME/bin"
 
-# 如果 Maven 依赖下载失败，先在 ~/.m2/settings.xml 配置公司 Maven 镜像，再重新执行安装。
+# 如果 Maven 或 npm 依赖下载失败，先配置对应公司的镜像源，再重新执行安装。
 ```
 
 Manual build:
