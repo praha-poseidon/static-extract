@@ -135,9 +135,9 @@ if [[ "$INSTALL_CLI" -eq 1 ]]; then
 fi
 
 if [[ "$INSTALL_SKILLS" -eq 1 ]]; then
-  install_skill "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}" static-extract-java
+  install_skill "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}" static-extract
   install_skill "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}" ser-author
-  install_skill "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" static-extract-java
+  install_skill "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" static-extract
   install_skill "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" ser-author
 fi
 
@@ -152,4 +152,3 @@ Try:
 If commands are not found, add this to your shell profile:
   export PATH="$BIN_DIR:\$PATH"
 EOF
-

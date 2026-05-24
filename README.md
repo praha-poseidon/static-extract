@@ -203,9 +203,9 @@ Installed skills:
 安装后的 Skill：
 
 ```text
-~/.codex/skills/static-extract-java
+~/.codex/skills/static-extract
 ~/.codex/skills/ser-author
-~/.claude/skills/static-extract-java
+~/.claude/skills/static-extract
 ~/.claude/skills/ser-author
 ```
 
@@ -253,7 +253,7 @@ static-extract-0.0.1/
     package.json
     package-lock.json
   skills/
-    static-extract-java/
+    static-extract/
     ser-author/
   spec/
   install.sh

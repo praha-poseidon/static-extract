@@ -190,9 +190,9 @@ install_skills() {
   local codex_dir="${CODEX_SKILLS_DIR:-$HOME/.codex/skills}"
   local claude_dir="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 
-  install_skill_dir "$codex_dir" "static-extract-java"
+  install_skill_dir "$codex_dir" "static-extract"
   install_skill_dir "$codex_dir" "ser-author"
-  install_skill_dir "$claude_dir" "static-extract-java"
+  install_skill_dir "$claude_dir" "static-extract"
   install_skill_dir "$claude_dir" "ser-author"
 }
 

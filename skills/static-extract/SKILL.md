@@ -1,50 +1,68 @@
 ---
-name: static-extract-java
-description: Use this skill when a user wants to analyze a Java project with static-extract-java, generate SER static extraction rules, validate them with the CLI, diagnose missing matches, or run extraction to produce structured JSON/JSONL results.
+name: static-extract
+description: Use this skill when a user wants to run Static Extract on a Java, TypeScript, JavaScript, or React project, validate SER rules with the matching CLI, diagnose missing matches, or produce structured JSON/JSONL facts.
 ---
 
 # Static Extract
 
-Use `static-extract-java` as the execution engine. Do not ask the user to write SER rules unless they explicitly want to; inspect the project, draft rules, run them, and iterate.
+Use the extractor CLI that matches the target project. Do not ask the user to
+write SER rules unless they explicitly want to; inspect the project, draft or
+reuse SER rules, run them, and iterate.
 
 ## Workflow
 
-1. Confirm the CLI is available:
+1. Detect the target extractor from the project or user request:
+   - Java/JDT: use `static-extract-java`
+   - TypeScript, JavaScript, JSX, TSX, or React: use `static-extract-ts`
+2. Confirm the matching CLI is available:
    ```bash
    static-extract-java --help
+   static-extract-ts --help
    ```
-2. Initialize workspace in the target project:
+3. Initialize the workspace in the target project:
    ```bash
    static-extract-java init --project /path/to/project
+   static-extract-ts init --project /path/to/project
    ```
-3. Inspect source files and identify concrete code shapes to extract: annotations, method calls, fields, constants, return values, and string paths.
-4. Decide extraction targets from the user request. If the user asks for broad service extraction, consider:
+4. Inspect source files and identify concrete code shapes to extract:
+   annotations, method calls, fields, constants, return values, string paths,
+   JSX elements, JSX props, imports, and callback references.
+5. Decide extraction targets from the user request. If the user asks for broad
+   service or UI extraction, consider:
    - HTTP inbound endpoints
    - HTTP outbound calls
+   - UI text and user actions
    - Kafka producers and consumers
    - MySQL/JDBC/MyBatis/JPA database operations
    - Redis operations and keys
    - Scheduled jobs
    - RPC clients and servers when visible in code
-5. Read `references/capabilities.md` before writing rules. Use these primitives to describe the code shapes you discover in the project.
-6. If target values may depend on extractor configuration, prepare an external-values JSON file. Read `references/external-values.md`.
-7. Write generated rules under:
+6. Read the relevant vocabulary before writing or repairing rules:
+   - Java/JDT: `references/capabilities.md`
+   - SER syntax: `references/ser-cheatsheet.md`
+   - TS/React: `references/react-ts-vocabulary.md`
+7. If target values may depend on extractor configuration, prepare an
+   external-values JSON file. Read `references/external-values.md`.
+8. Write generated rules under:
    ```text
    /path/to/project/.ser/generated
    ```
-8. Validate one rule on one or more representative files:
+9. Validate one rule on one or more representative files:
    ```bash
    static-extract-java try --project /path/to/project --file /path/to/File.java --rule /path/to/project/.ser/generated/name.ser
+   static-extract-ts try --project /path/to/project --source /path/to/Component.tsx --rule /path/to/project/.ser/generated/name.ser
    ```
-9. If no result is emitted, run:
+10. If no result is emitted, run:
    ```bash
    static-extract-java diagnose --project /path/to/project --file /path/to/File.java --rule /path/to/project/.ser/generated/name.ser
+   static-extract-ts diagnose --project /path/to/project --source /path/to/Component.tsx --rule /path/to/project/.ser/generated/name.ser
    ```
-   Use returned `facts.annotations`, `facts.methodCalls`, and `facts.pathLikeStrings` to adjust the rule.
-10. Repeat `try` until representative files emit expected fields.
-11. Run extraction:
+   Use returned facts to adjust the rule.
+11. Repeat `try` until representative files emit expected fields.
+12. Run extraction:
    ```bash
    static-extract-java run --project /path/to/project --rule /path/to/project/.ser/generated/name.ser --out /path/to/project/.ser/result/extract.jsonl
+   static-extract-ts run --project /path/to/project --source /path/to/project/src --rule /path/to/project/.ser/generated/name.ser --out /path/to/project/.ser/result/extract.jsonl
    ```
 
 One `.ser` file may contain both `rule ...` and `trace ...` blocks. Prefer one generated file per extraction goal, with the rule and its trace helpers together when they are related.
@@ -53,7 +71,10 @@ One `.ser` file may contain both `rule ...` and `trace ...` blocks. Prefer one g
 
 Read `references/ser-cheatsheet.md` before writing or repairing SER rules.
 
-Rules should be based on observable Java code shapes, not framework assumptions. Prefer one rule per extraction shape, for example one for annotation-based HTTP inbound endpoints and another for fluent router calls.
+Rules should be based on observable code shapes, not framework assumptions.
+Prefer one rule per extraction shape, for example one for annotation-based HTTP
+inbound endpoints, one for fluent router calls, one for JSX button text, and
+one for frontend API calls.
 
 The CLI executes SER rules. It does not decide product scope or framework semantics by itself. The agent must inspect the project, understand the actual code shapes, express those shapes with SER primitives, validate the rules, and report unsupported or ambiguous cases.
 
@@ -80,11 +101,12 @@ After running extraction, summarize results for the user. Do not paste raw JSON 
 Use this shape:
 
 ```text
-已完成 Java 静态提取。
+已完成静态提取。
 
 本次生成/使用的规则：
 - .ser/generated/http-inbound.ser: Spring MVC HTTP inbound endpoints
 - .ser/generated/http-outbound.ser: RestTemplate HTTP outbound calls
+- .ser/generated/react-button-text.ser: React button text
 
 验证情况：
 - try 通过：2 个代表文件
@@ -98,6 +120,7 @@ Use this shape:
 | HTTP | inbound | POST | /api/users | UserController.java:16 |
 | HTTP | outbound | GET | /api/users/{param} | UserClient.java:14 |
 | HTTP | outbound | POST | /api/users | UserClient.java:19 |
+| UI text | button | - | 保存 | UserForm.tsx:22 |
 
 需要注意：
 - 如果有依赖没有传入，涉及框架类型判断的规则可能会漏报。
