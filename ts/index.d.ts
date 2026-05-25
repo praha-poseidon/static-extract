@@ -40,10 +40,19 @@ export type StaticExtractRunResult = {
   results: StaticExtractFact[];
 };
 
+export type StaticExtractTsSession = {
+  run(options?: StaticExtractTsOptions): Promise<StaticExtractRunResult>;
+  tryRules(options?: StaticExtractTsOptions): Promise<Record<string, unknown>>;
+  diagnose(options?: StaticExtractTsOptions): Promise<Record<string, unknown>>;
+  dispose(): void;
+};
+
 export function init(request: { project: string }): Promise<Record<string, unknown>>;
 export function run(request: Record<string, unknown>): Promise<StaticExtractRunResult>;
 export function tryRules(request: Record<string, unknown>): Promise<Record<string, unknown>>;
 export function diagnose(request: Record<string, unknown>): Promise<Record<string, unknown>>;
+export function createSession(request: Record<string, unknown>): Promise<StaticExtractTsSession>;
 export function runStaticExtractTs(options: StaticExtractTsOptions): Promise<StaticExtractRunResult>;
 export function tryStaticExtractTs(options: StaticExtractTsOptions): Promise<Record<string, unknown>>;
 export function diagnoseStaticExtractTs(options: StaticExtractTsOptions): Promise<Record<string, unknown>>;
+export function createStaticExtractTsSession(options?: StaticExtractTsOptions): Promise<StaticExtractTsSession>;

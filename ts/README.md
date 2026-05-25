@@ -36,6 +36,30 @@ console.log(report.results);
 
 Use `builtin: true` to load built-in TS/React rules instead of passing `rule`.
 
+For tools that run extraction repeatedly, create one session and reuse its
+project AST:
+
+```js
+import { createStaticExtractTsSession } from "@static-extract/extractor-ts";
+
+const session = await createStaticExtractTsSession({
+  project: "/path/to/react-project",
+  source: "/path/to/react-project/src"
+});
+
+const apiFacts = await session.run({
+  rule: "/path/to/rules/api.ser",
+  traceRule: "/path/to/rules/api.trace.ser",
+  externalValues: "/path/to/external-values.json"
+});
+
+const uiFacts = await session.run({
+  rule: "/path/to/rules/ui.ser"
+});
+
+session.dispose();
+```
+
 ## Architecture
 
 ```text

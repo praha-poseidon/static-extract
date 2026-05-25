@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runStaticExtractTs, tryStaticExtractTs } from "../index.mjs";
+import { createStaticExtractTsSession, runStaticExtractTs, tryStaticExtractTs } from "../index.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repo = findRepoRoot(root);
@@ -27,6 +27,19 @@ const runReport = await runStaticExtractTs({
 });
 assert.equal(runReport.resultCount, 1);
 assert.equal(runReport.results[0].fields.path, "/api/users");
+
+const session = await createStaticExtractTsSession({
+  project: example,
+  source: resolve(example, "input")
+});
+const sessionReport = await session.run({
+  rule: resolve(example, "rule.ser"),
+  traceRule: resolve(example, "trace.ser"),
+  externalValues: resolve(example, "external-values.json")
+});
+assert.equal(sessionReport.resultCount, 1);
+assert.equal(sessionReport.results[0].fields.path, "/api/users");
+session.dispose();
 
 function findRepoRoot(start) {
   let current = start;

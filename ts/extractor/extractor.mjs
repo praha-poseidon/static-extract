@@ -3,7 +3,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Node, SyntaxKind } from "ts-morph";
-import { createAstModel } from "./ast-model.mjs";
+import { createAstProject } from "./ast-model.mjs";
 import { callName, callOwner, findAnchors } from "./find-executor.mjs";
 import { parseRule, parseTrace } from "./rule-parser.mjs";
 import { buildFields, evaluateLets, jsxAttribute, jsxTagName } from "./source-evaluator.mjs";
@@ -50,21 +50,76 @@ export async function run(request) {
   return { resultCount: report.resultCount, outputFile: request.outputFile, results: report.results };
 }
 
+export async function createSession(request) {
+  const state = await createExtractionState(request);
+  return {
+    async tryRules(overrides = {}) {
+      const nextRequest = mergeRequest(request, overrides);
+      const report = await extractWithState(nextRequest, state);
+      return { status: report.resultCount > 0 ? "MATCH" : "NO_MATCH", extractor: "ts", resultCount: report.resultCount, results: report.results };
+    },
+    async diagnose(overrides = {}) {
+      const nextRequest = mergeRequest(request, overrides);
+      const report = await extractWithState(nextRequest, state);
+      const sourceFiles = await sessionSourceFiles(nextRequest, state);
+      return {
+        status: report.resultCount > 0 ? "MATCH" : "NO_MATCH",
+        extractor: "ts",
+        resultCount: report.resultCount,
+        results: report.results,
+        sourceFacts: report.resultCount > 0 ? [] : collectSourceFactsFromState(sourceFiles, nextRequest.project, state)
+      };
+    },
+    async run(overrides = {}) {
+      const nextRequest = mergeRequest(request, overrides);
+      const report = await extractWithState(nextRequest, state);
+      const lines = report.results.map((result) => JSON.stringify(result)).join("\n");
+      if (nextRequest.outputFile) {
+        await mkdir(dirname(resolvePath(nextRequest.outputFile)), { recursive: true });
+        await writeFile(nextRequest.outputFile, lines ? lines + "\n" : "", "utf8");
+      }
+      return { resultCount: report.resultCount, outputFile: nextRequest.outputFile, results: report.results };
+    },
+    dispose() {
+      state.astProject.models.clear();
+      state.ruleCache.clear();
+      state.traceCache.clear();
+    }
+  };
+}
+
 async function extract(request) {
+  const state = await createExtractionState(request);
+  return extractWithState(request, state);
+}
+
+async function createExtractionState(request) {
+  const sourceFiles = await resolveSourceFiles(request.sources);
+  return {
+    sourceFiles,
+    astProject: createAstProject(request.project, sourceFiles),
+    ruleCache: new Map(),
+    traceCache: new Map()
+  };
+}
+
+async function extractWithState(request, state) {
   const ruleFiles = await resolveRuleFiles(request);
   if (ruleFiles.length === 0) {
     throw new Error("Pass at least one SER rule file, rule directory, or enable builtin rules.");
   }
   const rules = [];
   for (const file of ruleFiles) {
-    rules.push(parseRule(await readFile(file, "utf8"), file));
+    rules.push(await parseRuleCached(file, state));
   }
-  const traceOptions = await resolveTraceOptions(request);
-  const sourceFiles = await resolveSourceFiles(request.sources);
+  const traceOptions = await resolveTraceOptions(request, state);
+  const sourceFiles = await sessionSourceFiles(request, state);
   const results = [];
   for (const sourceFile of sourceFiles) {
-    const sourceText = await readFile(sourceFile, "utf8");
-    const model = createAstModel(sourceFile, sourceText);
+    const model = state.astProject.models.get(resolve(sourceFile));
+    if (!model) {
+      continue;
+    }
     for (const rule of rules) {
       for (const anchor of findAnchors(rule, model)) {
         const values = evaluateLets(rule, anchor, traceOptions);
@@ -75,14 +130,22 @@ async function extract(request) {
           fields: buildFields(rule, values),
           projectFilePath: projectFilePath(sourceFile, request.project),
           absoluteFilePath: sourceFile,
-          startLine: lineAt(sourceText, anchor.index),
-          endLine: lineAt(sourceText, anchor.index + anchor.raw.length - 1),
+          startLine: lineAt(model.sourceText, anchor.index),
+          endLine: lineAt(model.sourceText, anchor.index + anchor.raw.length - 1),
           enclosingSymbol: enclosingSymbol(anchor.node)
         });
       }
     }
   }
   return { resultCount: results.length, results };
+}
+
+async function parseRuleCached(file, state) {
+  const resolved = resolvePath(file);
+  if (!state.ruleCache.has(resolved)) {
+    state.ruleCache.set(resolved, parseRule(await readFile(resolved, "utf8"), resolved));
+  }
+  return state.ruleCache.get(resolved);
 }
 
 async function resolveRuleFiles(request) {
@@ -98,7 +161,7 @@ async function resolveRuleFiles(request) {
   return [...new Set(files)].sort();
 }
 
-async function resolveTraceOptions(request) {
+async function resolveTraceOptions(request, state) {
   const traceFiles = [];
   for (const file of request.traceRuleFiles ?? []) {
     traceFiles.push(resolvePath(file));
@@ -106,13 +169,23 @@ async function resolveTraceOptions(request) {
   for (const directory of request.traceRuleDirectories ?? []) {
     traceFiles.push(...await scanFiles(resolvePath(directory), [".ser"]));
   }
-  const traceRuleSets = [];
-  for (const file of [...new Set(traceFiles)].sort()) {
-    traceRuleSets.push(parseTrace(await readFile(file, "utf8"), file));
-  }
   const externalValues = request.externalValuesFile
     ? JSON.parse(await readFile(resolvePath(request.externalValuesFile), "utf8"))
     : {};
+  if (!state) {
+    const traceRuleSets = [];
+    for (const file of [...new Set(traceFiles)].sort()) {
+      traceRuleSets.push(parseTrace(await readFile(file, "utf8"), file));
+    }
+    return { traceRuleSets, externalValues };
+  }
+  const traceRuleSets = [];
+  for (const file of [...new Set(traceFiles)].sort()) {
+    if (!state.traceCache.has(file)) {
+      state.traceCache.set(file, parseTrace(await readFile(file, "utf8"), file));
+    }
+    traceRuleSets.push(state.traceCache.get(file));
+  }
   return { traceRuleSets, externalValues };
 }
 
@@ -152,10 +225,17 @@ async function scanFiles(root, extensions) {
 }
 
 async function collectSourceFacts(sourceFiles, projectRoot) {
+  const astProject = createAstProject(projectRoot, sourceFiles);
+  return collectSourceFactsFromState(sourceFiles, projectRoot, { astProject });
+}
+
+function collectSourceFactsFromState(sourceFiles, projectRoot, state) {
   const facts = [];
   for (const sourceFile of sourceFiles) {
-    const sourceText = await readFile(sourceFile, "utf8");
-    const model = createAstModel(sourceFile, sourceText);
+    const model = state.astProject.models.get(resolve(sourceFile));
+    if (!model) {
+      continue;
+    }
     facts.push(...jsxFacts(model, sourceFile, projectRoot));
     facts.push(...callFacts(model, sourceFile, projectRoot));
     facts.push(...functionFacts(model, sourceFile, projectRoot));
@@ -164,6 +244,26 @@ async function collectSourceFacts(sourceFiles, projectRoot) {
     facts.push(...classFacts(model, sourceFile, projectRoot));
   }
   return facts;
+}
+
+async function sessionSourceFiles(request, state) {
+  if (!request.sources?.length) {
+    return state.sourceFiles;
+  }
+  const sourceFiles = await resolveSourceFiles(request.sources);
+  return sourceFiles.filter((file) => state.astProject.models.has(resolve(file)));
+}
+
+function mergeRequest(base, overrides) {
+  return {
+    ...base,
+    ...overrides,
+    ruleFiles: overrides.ruleFiles ?? base.ruleFiles,
+    ruleDirectories: overrides.ruleDirectories ?? base.ruleDirectories,
+    traceRuleFiles: overrides.traceRuleFiles ?? base.traceRuleFiles,
+    traceRuleDirectories: overrides.traceRuleDirectories ?? base.traceRuleDirectories,
+    sources: overrides.sources ?? base.sources
+  };
 }
 
 function jsxFacts(model, sourceFile, projectRoot) {

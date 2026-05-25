@@ -219,6 +219,32 @@ const report = await runStaticExtractTs({
 });
 ```
 
+For repeated extraction inside another tool, reuse one TS session so the
+ts-morph Project is created once:
+
+如果在别的工具里反复提取，使用 TS session 复用同一个 ts-morph Project：
+
+```js
+import { createStaticExtractTsSession } from "@static-extract/extractor-ts";
+
+const session = await createStaticExtractTsSession({
+  project: "/path/to/react-project",
+  source: "/path/to/react-project/src"
+});
+
+const apiFacts = await session.run({
+  rule: "/path/to/rules/api.ser",
+  traceRule: "/path/to/rules/api.trace.ser",
+  externalValues: "/path/to/external-values.json"
+});
+
+const uiFacts = await session.run({
+  rule: "/path/to/rules/ui.ser"
+});
+
+session.dispose();
+```
+
 Installed skills:
 
 安装后的 Skill：
