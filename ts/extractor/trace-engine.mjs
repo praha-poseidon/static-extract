@@ -210,6 +210,9 @@ function normalizeValue(value, name) {
   if (name === "slash" || name === "httpPath" || name === "routePath") {
     return normalizeSlashPath(value);
   }
+  if (name === "fileRoutePath") {
+    return normalizeFileRoutePath(value);
+  }
   return value;
 }
 
@@ -226,6 +229,20 @@ function normalizeSlashPath(value) {
     path = `/${path}`;
   }
   return path.length > 1 ? path.replace(/\/$/, "") : path;
+}
+
+function normalizeFileRoutePath(value) {
+  let path = value.trim().replace(/\\/g, "/");
+  path = path.replace(/\.(tsx|ts|jsx|js|mjs|cjs)$/i, "");
+  path = path.replace(/\/(route|page|index)$/i, "");
+  const segments = path.split("/").filter(Boolean);
+  const apiIndex = segments.lastIndexOf("api");
+  if (apiIndex >= 0) {
+    path = `/${segments.slice(apiIndex).join("/")}`;
+  } else if (segments[0] === "src") {
+    path = `/${segments.slice(1).join("/")}`;
+  }
+  return normalizeSlashPath(path);
 }
 
 function resolveExternalValue(fields, externalValues = {}) {

@@ -1,5 +1,5 @@
 import { Node, SyntaxKind } from "ts-morph";
-import { callName, callOwner } from "./find-executor.mjs";
+import { callName, callOwner, exportEntries } from "./find-executor.mjs";
 import { referenceValue, traceValue } from "./value-tracer.mjs";
 
 export function evaluateLets(rule, anchor, options = {}) {
@@ -79,6 +79,9 @@ function normalizeValue(value, name) {
   if (name === "slash" || name === "httpPath" || name === "routePath") {
     return normalizeSlashPath(value);
   }
+  if (name === "fileRoutePath") {
+    return normalizeFileRoutePath(value);
+  }
   return value;
 }
 
@@ -97,6 +100,20 @@ function normalizeSlashPath(value) {
   return path.length > 1 ? path.replace(/\/$/, "") : path;
 }
 
+function normalizeFileRoutePath(value) {
+  let path = value.trim().replace(/\\/g, "/");
+  path = path.replace(/\.(tsx|ts|jsx|js|mjs|cjs)$/i, "");
+  path = path.replace(/\/(route|page|index)$/i, "");
+  const segments = path.split("/").filter(Boolean);
+  const apiIndex = segments.lastIndexOf("api");
+  if (apiIndex >= 0) {
+    path = `/${segments.slice(apiIndex).join("/")}`;
+  } else if (segments[0] === "src") {
+    path = `/${segments.slice(1).join("/")}`;
+  }
+  return normalizeSlashPath(path);
+}
+
 export function evaluateSource(source, anchor, options = {}) {
   if ((source.element === "children" || source.element === "jsx") && anchor.kind === "jsx") {
     return takeJsxValue(anchor.node, source.take, options);
@@ -113,8 +130,11 @@ export function evaluateSource(source, anchor, options = {}) {
   if (source.element === "handler" && anchor.kind === "call") {
     return takeHandlerValue(anchor.node, source.take, source.name);
   }
-  if (source.element === "file" && anchor.kind === "file") {
+  if (source.element === "file") {
     return takeFileValue(anchor, source.take);
+  }
+  if (source.element === "export" && anchor.kind === "file") {
+    return takeFileExportValue(anchor.node, source.name, source.take);
   }
   if ((source.element === "decorator" || source.element === "annotation") && source.on) {
     return takeRelatedDecoratorValue(anchor.node, source.on, source.name, source.take, options);
@@ -153,7 +173,7 @@ export function evaluateSource(source, anchor, options = {}) {
     return takeClassValue(anchor.node, source.take);
   }
   if (source.element === "export" && anchor.kind === "export") {
-    return takeExportValue(anchor.node, source.take);
+    return takeExportValue(anchor, source.take);
   }
   return "";
 }
@@ -290,7 +310,7 @@ function takeHandlerValue(node, take, selector) {
 }
 
 function takeFileValue(anchor, take) {
-  const path = anchor.name ?? anchor.filePath ?? "";
+  const path = anchor.filePath ?? anchor.name ?? sourceFilePath(anchor.node);
   if (take === "path" || take === "value" || take === "raw") {
     return path;
   }
@@ -306,6 +326,10 @@ function takeFileValue(anchor, take) {
     return index >= 0 ? name.slice(index) : "";
   }
   return "";
+}
+
+function sourceFilePath(node) {
+  return node?.getSourceFile?.()?.getFilePath?.()?.split("\\").join("/") ?? "";
 }
 
 function takeDecoratorValue(node, take, options) {
@@ -465,36 +489,40 @@ function takeClassValue(node, take) {
   return "";
 }
 
-function takeExportValue(node, take) {
+function takeFileExportValue(sourceFile, name, take) {
+  const expected = name || "*";
+  const entry = exportEntries(sourceFile).find((entry) => expected === "*" || entry.name === expected);
+  return entry ? takeExportEntryValue(entry, take) : "";
+}
+
+function takeExportValue(anchor, take) {
+  const entry = anchor.exportInfo ?? exportEntryFromNode(anchor.node, anchor.name);
+  return entry ? takeExportEntryValue(entry, take) : "";
+}
+
+function takeExportEntryValue(entry, take) {
+  if (take === "name") {
+    return entry.name;
+  }
+  if (take === "reference" || take === "value") {
+    return take === "value" ? entry.value : entry.reference;
+  }
   if (take === "raw") {
-    return node.getText();
-  }
-  if (Node.isExportDeclaration(node)) {
-    if (take === "module" || take === "value") {
-      return node.getModuleSpecifierValue() ?? "";
-    }
-    if (take === "name") {
-      return node.getNamedExports().map((item) => item.getName()).join(",");
-    }
-  }
-  if (take === "name" || take === "value") {
-    return typeof node.getName === "function" ? node.getName() ?? "default" : "default";
+    return entry.raw;
   }
   if (take === "kind" || take === "type") {
-    if (Node.isFunctionDeclaration(node) || Node.isFunctionExpression(node) || Node.isArrowFunction(node)) {
-      return "function";
-    }
-    if (Node.isClassDeclaration(node)) {
-      return "class";
-    }
-    if (Node.isVariableDeclaration(node)) {
-      return "variable";
-    }
-    if (Node.isExportDeclaration(node)) {
-      return "reexport";
-    }
+    return entry.kind;
+  }
+  if (take === "module") {
+    return entry.module;
   }
   return "";
+}
+
+function exportEntryFromNode(node, name) {
+  return exportEntries(node.getSourceFile()).find((entry) => entry.node === node && entry.name === name)
+    ?? exportEntries(node.getSourceFile()).find((entry) => entry.node === node)
+    ?? null;
 }
 
 export function jsxAttribute(node, name) {

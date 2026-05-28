@@ -2,6 +2,10 @@ import { Node, SyntaxKind } from "ts-morph";
 import { relative } from "node:path";
 
 export function findAnchors(rule, model) {
+  return annotateAnchors(findAnchorsForRule(rule, model), model);
+}
+
+function findAnchorsForRule(rule, model) {
   const { kind, name } = rule.find;
   if (kind === "file") {
     return fileAnchors(model, name);
@@ -46,6 +50,13 @@ export function findAnchors(rule, model) {
     return exportAnchors(model, name);
   }
   return [];
+}
+
+function annotateAnchors(anchors, model) {
+  const filePath = model.projectRoot
+    ? relative(model.projectRoot, model.sourceFile.getFilePath()).split("\\").join("/")
+    : model.sourceFile.getFilePath().split("\\").join("/");
+  return anchors.map((anchor) => ({ filePath, ...anchor }));
 }
 
 export function matchesAnchorWhen(anchor, conditions = []) {
@@ -209,44 +220,93 @@ function decoratorAnchors(model, name) {
 }
 
 function exportAnchors(model, name) {
-  const anchors = [];
-  for (const node of model.sourceFile.getExportDeclarations()) {
-    if (matches(node.getModuleSpecifierValue() ?? "*", name)) {
-      anchors.push(anchor("export", node.getModuleSpecifierValue() ?? "export", node));
-    }
-  }
-  for (const node of model.sourceFile.getFunctions()) {
-    if (node.isExported() && matches(node.getName() ?? "default", name)) {
-      anchors.push(anchor("export", node.getName() ?? "default", node));
-    }
-  }
-  for (const node of model.sourceFile.getClasses()) {
-    if (node.isExported() && matches(node.getName() ?? "default", name)) {
-      anchors.push(anchor("export", node.getName() ?? "default", node));
-    }
-  }
-  for (const node of model.sourceFile.getVariableDeclarations()) {
-    const statement = node.getVariableStatement();
-    if (statement?.isExported() && matches(node.getName(), name)) {
-      anchors.push(anchor("export", node.getName(), node));
-    }
-  }
-  for (const node of model.sourceFile.getExportAssignments()) {
-    if (!node.isExportEquals() && matches("default", name)) {
-      anchors.push(anchor("export", "default", node));
-    }
-  }
-  return anchors;
+  return exportEntries(model.sourceFile)
+    .filter((entry) => matches(entry.name, name))
+    .map((entry) => anchor("export", entry.name, entry.node, null, { exportInfo: entry }));
 }
 
-function anchor(kind, name, node, declaration = null) {
+export function exportEntries(sourceFile) {
+  return [
+    ...declarationExportEntries(sourceFile),
+    ...exportDeclarationEntries(sourceFile),
+    ...exportAssignmentEntries(sourceFile)
+  ];
+}
+
+function declarationExportEntries(sourceFile) {
+  const entries = [];
+  for (const node of sourceFile.getFunctions()) {
+    if (hasDefaultExportKeyword(node)) {
+      entries.push(exportEntry("default", node.getName() ?? "default", "function", "", node));
+    } else if (node.hasExportKeyword?.() && node.getName()) {
+      entries.push(exportEntry(node.getName(), node.getName(), "function", "", node));
+    }
+  }
+  for (const node of sourceFile.getClasses()) {
+    if (hasDefaultExportKeyword(node)) {
+      entries.push(exportEntry("default", node.getName() ?? "default", "class", "", node));
+    } else if (node.hasExportKeyword?.() && node.getName()) {
+      entries.push(exportEntry(node.getName(), node.getName(), "class", "", node));
+    }
+  }
+  for (const node of sourceFile.getVariableDeclarations()) {
+    const statement = node.getVariableStatement();
+    if (statement?.hasExportKeyword?.()) {
+      entries.push(exportEntry(node.getName(), node.getName(), "variable", "", node));
+    }
+  }
+  return entries;
+}
+
+function hasDefaultExportKeyword(node) {
+  return node.getText().startsWith("export default");
+}
+
+function exportDeclarationEntries(sourceFile) {
+  const entries = [];
+  for (const node of sourceFile.getExportDeclarations()) {
+    const module = node.getModuleSpecifierValue() ?? "";
+    for (const specifier of node.getNamedExports()) {
+      const reference = specifier.getName();
+      const name = specifier.getAliasNode()?.getText() ?? reference;
+      entries.push(exportEntry(name, reference, module ? "reexport" : "export", module, node));
+    }
+  }
+  return entries;
+}
+
+function exportAssignmentEntries(sourceFile) {
+  const entries = [];
+  for (const node of sourceFile.getExportAssignments()) {
+    if (!node.isExportEquals()) {
+      const expression = node.getExpression();
+      entries.push(exportEntry("default", expression?.getText() || "default", "default", "", node));
+    }
+  }
+  return entries;
+}
+
+function exportEntry(name, reference, kind, module, node) {
+  return {
+    name,
+    reference,
+    value: module ? `${module}/${reference}` : reference,
+    kind,
+    module,
+    raw: node.getText(),
+    node
+  };
+}
+
+function anchor(kind, name, node, declaration = null, extra = {}) {
   return {
     kind,
     name,
     node,
     declaration,
     index: node.getStart(),
-    raw: node.getText()
+    raw: node.getText(),
+    ...extra
   };
 }
 

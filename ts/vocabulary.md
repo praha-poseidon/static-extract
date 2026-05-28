@@ -85,6 +85,8 @@ from file take path
 from file take name
 from file take dir
 from file take extension
+from export default take reference
+from export GET take reference
 from decorator take name
 from decorator take value
 from decorator take attr(0)
@@ -112,10 +114,27 @@ from class take extends
 from class take raw
 from export take name
 from export take value
+from export take reference
 from export take module
 from export take kind
 from export take raw
 ```
+
+`from file ...` reads the current source file. It works from any anchor in that
+file, including `find export ...`.
+
+`from export <name> ...` reads exports from the current file when the current
+anchor is `file`. For example, `from export default take reference` returns the
+local symbol behind a default export when one exists.
+
+Export values are language-level module facts:
+
+- `name`: exported name, such as `GET`, `POST`, or `default`
+- `reference`: local symbol or expression behind the export, such as `handler`
+- `value`: same as `reference`, or `module/reference` for re-exports
+- `raw`: source text for the export node
+- `kind`: `function`, `class`, `variable`, `export`, `reexport`, or `default`
+- `module`: module specifier for re-exports
 
 `let` supports source fallback and value mapping:
 
@@ -138,7 +157,7 @@ build {
 ```
 
 Built-in normalizers are generic value transforms: `trim`, `upper`, `lower`,
-`slash`, `httpPath`, and `routePath`.
+`slash`, `httpPath`, `routePath`, and `fileRoutePath`.
 
 ## Value Tracing
 
