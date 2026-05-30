@@ -1,7 +1,7 @@
 rule "File Named Route Export"
 fact file_named_export
 
-find export GET
+find export [GET,POST]
 
 let method =
   from export take name

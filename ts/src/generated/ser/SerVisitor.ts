@@ -33,6 +33,7 @@ import { AnnotationRefContext } from "./SerParser.js";
 import { DecoratorRefContext } from "./SerParser.js";
 import { ElementRefContext } from "./SerParser.js";
 import { IdentListContext } from "./SerParser.js";
+import { FindNameContext } from "./SerParser.js";
 import { NameItemContext } from "./SerParser.js";
 import { LiteralContext } from "./SerParser.js";
 import { ValueTokenContext } from "./SerParser.js";
@@ -232,6 +233,12 @@ export class SerVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      * @return the visitor result
      */
     visitIdentList?: (ctx: IdentListContext) => Result;
+    /**
+     * Visit a parse tree produced by `SerParser.findName`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitFindName?: (ctx: FindNameContext) => Result;
     /**
      * Visit a parse tree produced by `SerParser.nameItem`.
      * @param ctx the parse tree

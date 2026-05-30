@@ -101,6 +101,19 @@ build {
     assert.match(diagnoseReport, /"kind": "decorator"/);
     assert.match(diagnoseReport, /"kind": "export"/);
   }
+  if (example.endsWith("export-shapes")) {
+    assert.match(diagnoseReport, /"kind": "file"/);
+    assert.match(diagnoseReport, /"kind": "export"/);
+    assert.match(diagnoseReport, /"reference": "handler"/);
+  }
+  if (example.endsWith("call-route-handler")) {
+    assert.match(diagnoseReport, /"kind": "call"/);
+    assert.match(diagnoseReport, /"callee": "router.get"/);
+  }
+  if (example.endsWith("jsx-value-reference")) {
+    assert.match(diagnoseReport, /"kind": "jsx"/);
+    assert.match(diagnoseReport, /"tag": "a"/);
+  }
 
   const report = execFileSync("node", [
     resolve(root, "cli/static-extract-ts.mjs"),

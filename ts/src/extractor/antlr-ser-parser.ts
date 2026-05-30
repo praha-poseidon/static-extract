@@ -46,7 +46,7 @@ type BuildSpec = { value: BuildValue | ConcatBuildValue; pipeline: PipelineStepM
 export type SerRuleModel = {
   name: string;
   factType: string;
-  find: { kind: string; name: string };
+  find: { kind: string; name: string | string[] };
   when: TraceWhenModel[];
   lets: Record<string, LetSpec>;
   build: Record<string, BuildSpec>;
@@ -134,9 +134,9 @@ class ThrowingErrorListener extends BaseErrorListener {
   }
 }
 
-function parseFind(ctx: FindDeclContext): { kind: string; name: string } {
+function parseFind(ctx: FindDeclContext): { kind: string; name: string | string[] } {
   if (ctx._genericFindKind) {
-    return { kind: text(ctx._genericFindKind), name: ctx._genericFindName ? text(ctx._genericFindName) : "*" };
+    return { kind: text(ctx._genericFindKind), name: ctx._genericFindName ? parseFindName(ctx._genericFindName) : "*" };
   }
   if (ctx.METHOD()) {
     return { kind: "method", name: ctx.methodPattern()?.getText() ?? "*" };
@@ -148,6 +148,15 @@ function parseFind(ctx: FindDeclContext): { kind: string; name: string } {
     return { kind: "field", name: ctx._fieldName ? text(ctx._fieldName) : "*" };
   }
   return { kind: "unknown", name: "*" };
+}
+
+function parseFindName(ctx: { getText(): string }): string | string[] {
+  const value = ctx.getText();
+  if (!value.startsWith("[") || !value.endsWith("]")) {
+    return value;
+  }
+  const inner = value.slice(1, -1).trim();
+  return inner ? inner.split(",").map((item) => item.trim()).filter(Boolean) : [];
 }
 
 function parseLets(contexts: LetDeclContext[]): Record<string, LetSpec> {

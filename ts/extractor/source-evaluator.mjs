@@ -92,6 +92,7 @@ function normalizeSlashPath(value) {
   path = path.replace(/:([A-Za-z_$][\w$]*)/g, "{param}");
   path = path.replace(/\$\{[^}]+}/g, "{param}");
   path = path.replace(/\{[^}/]+}/g, "{param}");
+  path = path.replace(/\[\[\.{3}[^\]]+]]/g, "{param}");
   path = path.replace(/\[\.{3}[^\]]+]/g, "{param}");
   path = path.replace(/\[[^\]]+]/g, "{param}");
   if (path && !path.startsWith("/")) {
@@ -104,7 +105,9 @@ function normalizeFileRoutePath(value) {
   let path = value.trim().replace(/\\/g, "/");
   path = path.replace(/\.(tsx|ts|jsx|js|mjs|cjs)$/i, "");
   path = path.replace(/\/(route|page|index)$/i, "");
-  const segments = path.split("/").filter(Boolean);
+  const segments = path.split("/")
+    .filter(Boolean)
+    .filter((segment) => !segment.startsWith("(") && !segment.startsWith("@"));
   const apiIndex = segments.lastIndexOf("api");
   if (apiIndex >= 0) {
     path = `/${segments.slice(apiIndex).join("/")}`;

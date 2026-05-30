@@ -36,7 +36,7 @@ findDecl
     | FIND CLASS
     | FIND FIELD WITH ANNOTATION annotationRef
     | FIND FIELD fieldName=nameItem
-    | FIND genericFindKind=nameItem genericFindName=nameItem?
+    | FIND genericFindKind=nameItem genericFindName=findName?
     ;
 
 letDecl
@@ -179,6 +179,11 @@ elementRef
 
 identList
     : nameItem (COMMA nameItem)*
+    ;
+
+findName
+    : nameItem
+    | LBRACK identList RBRACK
     ;
 
 nameItem

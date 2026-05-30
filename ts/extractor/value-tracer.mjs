@@ -62,6 +62,10 @@ export function referenceValue(node) {
     if (Node.isCallExpression(body)) {
       return body.getExpression().getText();
     }
+    return "inline";
+  }
+  if (Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node)) {
+    return typeof node.getName === "function" ? node.getName() ?? "inline" : "inline";
   }
   return `{${node.getText()}}`;
 }

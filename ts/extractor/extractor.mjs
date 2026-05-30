@@ -4,7 +4,7 @@ import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node
 import { fileURLToPath } from "node:url";
 import { Node, SyntaxKind } from "ts-morph";
 import { createAstProject } from "./ast-model.mjs";
-import { callName, callOwner, findAnchors, matchesAnchorWhen } from "./find-executor.mjs";
+import { callName, callOwner, exportEntries, findAnchors, matchesAnchorWhen } from "./find-executor.mjs";
 import { parseRule, parseTrace } from "./rule-parser.mjs";
 import { buildFields, evaluateLets, jsxAttribute, jsxTagName } from "./source-evaluator.mjs";
 import { referenceValue, traceValue } from "./value-tracer.mjs";
@@ -239,6 +239,7 @@ function collectSourceFactsFromState(sourceFiles, projectRoot, state) {
     if (!model) {
       continue;
     }
+    facts.push(...fileFacts(model, sourceFile, projectRoot));
     facts.push(...jsxFacts(model, sourceFile, projectRoot));
     facts.push(...callFacts(model, sourceFile, projectRoot));
     facts.push(...functionFacts(model, sourceFile, projectRoot));
@@ -275,6 +276,7 @@ function jsxFacts(model, sourceFile, projectRoot) {
   return findAnchors({ find: { kind: "jsx", name: "*" } }, model).map((anchor) => ({
     kind: "jsx",
     name: anchor.name,
+    tag: anchor.name,
     text: jsxText(anchor.node),
     events: jsxEvents(anchor.node),
     props: jsxProps(anchor.node),
@@ -288,6 +290,16 @@ function callFacts(model, sourceFile, projectRoot) {
     kind: "call",
     name: callName(anchor.node),
     owner: callOwner(anchor.node),
+    callee: anchor.node.getExpression().getText(),
+    raw: anchor.raw,
+    ...locationFields(model, sourceFile, projectRoot, anchor)
+  }));
+}
+
+function fileFacts(model, sourceFile, projectRoot) {
+  return findAnchors({ find: { kind: "file", name: "*" } }, model).map((anchor) => ({
+    kind: "file",
+    name: anchor.name,
     raw: anchor.raw,
     ...locationFields(model, sourceFile, projectRoot, anchor)
   }));
@@ -316,6 +328,8 @@ function importFacts(model, sourceFile, projectRoot) {
   return findAnchors({ find: { kind: "import", name: "*" } }, model).map((anchor) => ({
     kind: "import",
     module: anchor.node.getModuleSpecifierValue(),
+    default: anchor.node.getDefaultImport()?.getText() ?? "",
+    named: anchor.node.getNamedImports().map((namedImport) => namedImport.getName()),
     defaultImport: anchor.node.getDefaultImport()?.getText() ?? "",
     namespaceImport: anchor.node.getNamespaceImport()?.getText() ?? "",
     namedImports: anchor.node.getNamedImports().map((namedImport) => namedImport.getName()),
@@ -328,9 +342,18 @@ function exportFacts(model, sourceFile, projectRoot) {
   return findAnchors({ find: { kind: "export", name: "*" } }, model).map((anchor) => ({
     kind: "export",
     name: anchor.name,
+    reference: anchor.exportInfo?.reference ?? exportEntryForAnchor(anchor)?.reference ?? "",
+    module: anchor.exportInfo?.module ?? exportEntryForAnchor(anchor)?.module ?? "",
+    exportKind: anchor.exportInfo?.kind ?? exportEntryForAnchor(anchor)?.kind ?? "",
     raw: anchor.raw,
     ...locationFields(model, sourceFile, projectRoot, anchor)
   }));
+}
+
+function exportEntryForAnchor(anchor) {
+  return exportEntries(anchor.node.getSourceFile()).find((entry) => entry.node === anchor.node && entry.name === anchor.name)
+    ?? exportEntries(anchor.node.getSourceFile()).find((entry) => entry.node === anchor.node)
+    ?? null;
 }
 
 function classFacts(model, sourceFile, projectRoot) {
@@ -354,10 +377,14 @@ function decoratorFacts(model, sourceFile, projectRoot) {
 }
 
 function locationFields(model, sourceFile, projectRoot, anchor) {
+  const file = projectFilePath(sourceFile, projectRoot);
+  const line = lineAt(model.sourceText, anchor.index);
   return {
-    projectFilePath: projectFilePath(sourceFile, projectRoot),
+    file,
+    line,
+    projectFilePath: file,
     absoluteFilePath: sourceFile,
-    startLine: lineAt(model.sourceText, anchor.index),
+    startLine: line,
     endLine: lineAt(model.sourceText, anchor.index + anchor.raw.length - 1),
     enclosingSymbol: enclosingSymbol(anchor.node)
   };

@@ -1,7 +1,7 @@
 rule "TS Call Route Handler"
 fact ts_call_route
 
-find call patch
+find call [get,post,put,patch,delete]
 when call owner router
 
 let method =

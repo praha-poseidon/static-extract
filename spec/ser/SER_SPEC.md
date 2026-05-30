@@ -151,7 +151,12 @@ rules SHOULD use explicit `fact`.
 find method with annotation @GetMapping
 find method RestTemplate.getForObject
 find jsx Button
+find export [GET,POST]
 ```
+
+Extractor vocabularies MAY support a bracketed name list after `find`. A list is
+equivalent to running the same selector once per listed name and may emit
+multiple facts from one rule.
 
 Each matched anchor MAY emit zero, one, or multiple facts, depending on value
 cardinality during `build`.

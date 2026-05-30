@@ -6,20 +6,30 @@ selectors map to AST shapes instead of framework-specific branches.
 ## Supported Find Selectors
 
 ```ser
-find jsx <tagName>
-find call <callee>
-find function <name>
-find variable <name>
+find file
+find export <name>
 find import <moduleSpecifier>
 find class <name>
+find function <name>
 find method <name>
 find field <name>
+find variable <name>
 find parameter <name>
-find assignment <name>
+find call <callee>
 find return <name>
+find assignment <name>
 find decorator <name>
-find file <fileNameOrStem>
-find export <name>
+find jsx <tagName>
+```
+
+Selectors accept one name, no name (`*`), or a bracketed list. One rule can emit
+facts for every matched name:
+
+```ser
+find export [GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS]
+find call [get,post,put,patch,delete]
+find decorator [Get,Post,Put,Patch,Delete]
+find jsx [button,a,Button]
 ```
 
 Examples:
@@ -39,6 +49,10 @@ find decorator Get
 find file route
 find export default
 ```
+
+The extractor treats these as TypeScript/JavaScript language elements only. It
+does not assign endpoint, UI action, route, or framework meaning to any match;
+SER rules decide what a matched element means.
 
 ## Rule Conditions
 
@@ -80,6 +94,7 @@ from call take callee
 from call take method
 from call take raw
 from handler take reference
+from handler take raw
 from handler last take reference
 from file take path
 from file take name
@@ -159,6 +174,11 @@ build {
 Built-in normalizers are generic value transforms: `trim`, `upper`, `lower`,
 `slash`, `httpPath`, `routePath`, and `fileRoutePath`.
 
+`fileRoutePath` is a generic file-route path normalizer. It removes common source
+prefixes and file suffixes, uses the last `api` path segment when present,
+removes group/slot path segments such as `(group)` and `@slot`, and normalizes
+bracket parameters like `[id]`, `[...slug]`, and `[[...slug]]` to `{param}`.
+
 ## Value Tracing
 
 The TypeScript extractor builds a `ts-morph` project for the selected sources.
@@ -187,3 +207,12 @@ project AST across repeated rule runs.
 Limits still apply for dynamic `require`, runtime mutation, generated aliases
 that are not visible to the TypeScript project, and values that only exist at
 runtime unless they are supplied through external values.
+
+## Limits
+
+Route chains such as `router.route("/users/:id").get(handler)` are not modeled
+as a framework concept. The extractor can expose the language-level calls
+(`router.route(...)` and `.get(...)`) and their arguments, but a portable SER
+rule currently cannot join receiver-call arguments into one fact without a more
+general receiver-call vocabulary. Keep this composition in downstream rules or a
+future generic receiver-call extension.

@@ -311,6 +311,9 @@ function anchor(kind, name, node, declaration = null, extra = {}) {
 }
 
 function matches(actual, expected) {
+  if (Array.isArray(expected)) {
+    return expected.some((item) => matches(actual, item));
+  }
   return expected === "*" || actual === expected;
 }
 
@@ -320,6 +323,9 @@ function assignmentName(node) {
 }
 
 function matchesCall(node, expected) {
+  if (Array.isArray(expected)) {
+    return expected.some((item) => matchesCall(node, item));
+  }
   return expected === "*" || callCallee(node) === expected || callName(node) === expected || callOwner(node) === expected;
 }
 

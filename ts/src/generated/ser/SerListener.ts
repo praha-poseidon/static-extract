@@ -33,6 +33,7 @@ import { AnnotationRefContext } from "./SerParser.js";
 import { DecoratorRefContext } from "./SerParser.js";
 import { ElementRefContext } from "./SerParser.js";
 import { IdentListContext } from "./SerParser.js";
+import { FindNameContext } from "./SerParser.js";
 import { NameItemContext } from "./SerParser.js";
 import { LiteralContext } from "./SerParser.js";
 import { ValueTokenContext } from "./SerParser.js";
@@ -353,6 +354,16 @@ export class SerListener implements ParseTreeListener {
      * @param ctx the parse tree
      */
     exitIdentList?: (ctx: IdentListContext) => void;
+    /**
+     * Enter a parse tree produced by `SerParser.findName`.
+     * @param ctx the parse tree
+     */
+    enterFindName?: (ctx: FindNameContext) => void;
+    /**
+     * Exit a parse tree produced by `SerParser.findName`.
+     * @param ctx the parse tree
+     */
+    exitFindName?: (ctx: FindNameContext) => void;
     /**
      * Enter a parse tree produced by `SerParser.nameItem`.
      * @param ctx the parse tree

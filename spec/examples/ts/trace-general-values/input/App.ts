@@ -12,3 +12,7 @@ function joinPath(path: string) {
 export function loadList() {
   return fetch(joinPath(config.leaf));
 }
+
+export function loadById(id: string) {
+  return fetch(`/api/${id}`);
+}
