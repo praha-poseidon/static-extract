@@ -11,14 +11,14 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>static-extract-extractor-java-cli</artifactId>
-  <name>static-extract-extractor-java-cli</name>
+  <artifactId>static-extract-java-cli</artifactId>
+  <name>static-extract-java-cli</name>
   <description>Command line interface for the Java/JDT Static Extract extractor</description>
 
   <dependencies>
     <dependency>
       <groupId>com.poseidon</groupId>
-      <artifactId>static-extract-extractor-java-assistant</artifactId>
+      <artifactId>static-extract-java-assistant</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

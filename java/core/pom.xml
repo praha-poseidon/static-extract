@@ -11,8 +11,8 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>static-extract-core-java</artifactId>
-  <name>static-extract-core-java</name>
+  <artifactId>static-extract-java-core</artifactId>
+  <name>static-extract-java-core</name>
   <description>Java implementation of the Static Extract SER parser and rule model</description>
   <packaging>jar</packaging>
 

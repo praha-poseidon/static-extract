@@ -11,14 +11,14 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>static-extract-extractor-java-assistant</artifactId>
-  <name>static-extract-extractor-java-assistant</name>
+  <artifactId>static-extract-java-assistant</artifactId>
+  <name>static-extract-java-assistant</name>
   <description>Assistant-facing workflow API for the Java/JDT Static Extract extractor</description>
 
   <dependencies>
     <dependency>
       <groupId>com.poseidon</groupId>
-      <artifactId>static-extract-extractor-java-jdt</artifactId>
+      <artifactId>static-extract-java-jdt</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

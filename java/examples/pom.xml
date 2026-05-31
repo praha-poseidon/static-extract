@@ -11,15 +11,15 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>static-extract-examples-java</artifactId>
-  <name>static-extract-examples-java</name>
+  <artifactId>static-extract-java-examples</artifactId>
+  <name>static-extract-java-examples</name>
   <description>Example SER rules for the Java/JDT Static Extract extractor</description>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>com.poseidon</groupId>
-      <artifactId>static-extract-extractor-java-jdt</artifactId>
+      <artifactId>static-extract-java-jdt</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

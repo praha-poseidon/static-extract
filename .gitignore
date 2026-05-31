@@ -1,6 +1,6 @@
 target/
 dist/
-build/
+/build/
 .gradle/
 node_modules/
 
