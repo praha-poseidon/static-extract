@@ -21,30 +21,91 @@ export function createAstModel(filePath, sourceText) {
 export function createAstProject(projectRoot, filePaths) {
   const root = projectRoot ? resolve(projectRoot) : commonRoot(filePaths);
   const tsConfigFilePath = findTsConfig(root);
-  const project = new Project({
-    ...(tsConfigFilePath ? { tsConfigFilePath } : {}),
-    compilerOptions: {
-      allowJs: true,
-      jsx: 4,
-      target: ScriptTarget.Latest
-    },
-    skipAddingFilesFromTsConfig: true
-  });
-  const models = new Map();
-  for (const filePath of filePaths) {
+  return {
+    root,
+    models: new LazyAstModelStore(root, tsConfigFilePath, filePaths)
+  };
+}
+
+class LazyAstModelStore {
+  constructor(projectRoot, tsConfigFilePath, filePaths, maxEntries = Number(process.env.STATIC_EXTRACT_TS_AST_CACHE_SIZE ?? 12)) {
+    this.projectRoot = projectRoot;
+    this.tsConfigFilePath = tsConfigFilePath;
+    this.filePaths = new Set(filePaths.map((filePath) => resolve(filePath)));
+    this.maxEntries = Number.isFinite(maxEntries) && maxEntries > 0 ? maxEntries : 12;
+    this.cache = new Map();
+  }
+
+  has(filePath) {
+    return this.filePaths.has(resolve(filePath));
+  }
+
+  get(filePath) {
     const absolutePath = resolve(filePath);
+    if (!this.filePaths.has(absolutePath)) {
+      return undefined;
+    }
+    const cached = this.cache.get(absolutePath);
+    if (cached) {
+      this.cache.delete(absolutePath);
+      this.cache.set(absolutePath, cached);
+      return cached.model;
+    }
+    const project = this.createProject();
     const sourceFile = project.addSourceFileAtPathIfExists(absolutePath);
     if (!sourceFile) {
-      continue;
+      return undefined;
     }
-    models.set(absolutePath, {
+    const entry = {
       project,
       sourceFile,
-      sourceText: sourceFile.getFullText(),
-      projectRoot: root
+      model: {
+        project,
+        sourceFile,
+        sourceText: sourceFile.getFullText(),
+        projectRoot: this.projectRoot
+      }
+    };
+    this.cache.set(absolutePath, entry);
+    this.evict();
+    return entry.model;
+  }
+
+  clear() {
+    for (const entry of this.cache.values()) {
+      disposeEntry(entry);
+    }
+    this.cache.clear();
+  }
+
+  createProject() {
+    return new Project({
+      ...(this.tsConfigFilePath ? { tsConfigFilePath: this.tsConfigFilePath } : {}),
+      compilerOptions: {
+        allowJs: true,
+        jsx: 4,
+        target: ScriptTarget.Latest
+      },
+      skipAddingFilesFromTsConfig: true
     });
   }
-  return { project, root, models };
+
+  evict() {
+    while (this.cache.size > this.maxEntries) {
+      const oldestKey = this.cache.keys().next().value;
+      const oldest = this.cache.get(oldestKey);
+      this.cache.delete(oldestKey);
+      disposeEntry(oldest);
+    }
+  }
+}
+
+function disposeEntry(entry) {
+  try {
+    entry?.sourceFile?.forget?.();
+  } catch {
+    // Best-effort release of ts-morph nodes.
+  }
 }
 
 function scriptKind(filePath) {

@@ -214,7 +214,7 @@ async function scanFiles(root, extensions) {
   }
   const files = [];
   for (const entry of await readdir(root, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name === "target" || entry.name === ".git" || entry.name === ".ser") {
+    if (isSkippedDirectory(entry.name)) {
       continue;
     }
     const path = join(root, entry.name);
@@ -227,9 +227,31 @@ async function scanFiles(root, extensions) {
   return files;
 }
 
+function isSkippedDirectory(name) {
+  return [
+    "node_modules",
+    "target",
+    ".git",
+    ".ser",
+    ".next",
+    ".nuxt",
+    ".cache",
+    "dist",
+    "build",
+    "coverage",
+    "out",
+    "tmp",
+    "temp"
+  ].includes(name);
+}
+
 async function collectSourceFacts(sourceFiles, projectRoot) {
   const astProject = createAstProject(projectRoot, sourceFiles);
-  return collectSourceFactsFromState(sourceFiles, projectRoot, { astProject });
+  try {
+    return collectSourceFactsFromState(sourceFiles, projectRoot, { astProject });
+  } finally {
+    astProject.models.clear();
+  }
 }
 
 function collectSourceFactsFromState(sourceFiles, projectRoot, state) {

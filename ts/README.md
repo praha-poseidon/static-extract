@@ -8,9 +8,13 @@ evaluation, built-in TS rules, and the `static-extract-ts` CLI. It implements
 the shared contracts under `spec/` directly in TypeScript-family JavaScript and
 does not depend on the Java core jar.
 
-The extractor builds a `ts-morph` project for the selected sources, so value
-tracing can follow basic cross-file imports when TypeScript can resolve the
-symbol.
+The extractor creates `ts-morph` projects lazily per source file and keeps a
+small AST cache. This avoids loading a whole frontend repository into memory at
+once while still allowing TypeScript to resolve basic cross-file imports from
+the current file. Generated dependency/output directories such as
+`node_modules`, `.next`, `dist`, `build`, and `coverage` are skipped during
+directory scans. Set `STATIC_EXTRACT_TS_AST_CACHE_SIZE` to tune the cache size
+for repeated extraction sessions.
 
 ## Commands
 
@@ -41,7 +45,7 @@ console.log(report.results);
 Use `builtin: true` to load built-in TS/React rules instead of passing `rule`.
 
 For tools that run extraction repeatedly, create one session and reuse its
-project AST:
+lazy AST cache:
 
 ```js
 import { createStaticExtractTsSession } from "@static-extract/extractor-ts";
